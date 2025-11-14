@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BTC Майнинг Game — Mega Success Onboarding</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #141b3d;
+            --bg-tertiary: #1e2749;
+            --primary: #00d4ff;
+            --primary-dark: #00a8cc;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --error: #ff4444;
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --text-disabled: #4a5568;
+            --border: #2d3748;
+            --shadow: rgba(0, 212, 255, 0.1);
+            --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            --gradient-success: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Tutorial Overlay */
+        .tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            background: rgba(10, 14, 39, 0.98);
+            backdrop-filter: blur(20px);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tutorial-overlay.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Tutorial Step Container */
+        .tutorial-step {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--primary);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.4);
+            animation: slideUp 0.5s ease;
+            display: none;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .tutorial-step.active {
+            display: block;
+        }
+
+        .tutorial-step::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tutorial-step::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .tutorial-step::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        /* Step Header */
+        .step-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .step-icon {
+            font-size: 100px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.6));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-15px) scale(1.1); }
+        }
+
+        .step-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .step-description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Hero Section (Step 0) */
+        .hero-section {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .hero-animation {
+            font-size: 120px;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5)); }
+            50% { transform: scale(1.1); filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.8)); }
+        }
+
+        .hero-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .social-proof {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 24px 0;
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        .social-proof strong {
+            font-size: 18px;
+            color: var(--success);
+        }
+
+        /* Journey Visualization */
+        .journey-visual {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 2px solid var(--primary);
+        }
+
+        .journey-path {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .journey-path::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            z-index: 0;
+        }
+
+        .journey-step {
+            background: var(--bg-secondary);
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .journey-step:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+        }
+
+        .journey-step.active {
+            background: var(--gradient-primary);
+            border-color: var(--success);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        }
+
+        .journey-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .journey-step.active .journey-label {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Interactive Cards */
+        .value-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .value-card {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .value-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .value-card-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .value-card-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .value-card-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Goal Cards */
+        .goal-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .goal-card {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .goal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .goal-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+        }
+
+        .goal-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .goal-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Starter Pack */
+        .starter-pack {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 2px solid var(--success);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .starter-pack::before {
+            content: '🎁';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+
+        .pack-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            animation: slideInLeft 0.5s ease backwards;
+            border: 1px solid var(--border);
+        }
+
+        .pack-item:nth-child(1) { animation-delay: 0.1s; }
+        .pack-item:nth-child(2) { animation-delay: 0.2s; }
+        .pack-item:nth-child(3) { animation-delay: 0.3s; }
+        .pack-item:nth-child(4) { animation-delay: 0.4s; }
+        .pack-item:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .item-icon {
+            font-size: 40px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--gradient-primary);
+            border-radius: 16px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .item-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Timer Preview */
+        .timer-preview {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 32px;
+            margin: 24px 0;
+            border: 2px solid var(--primary);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .timer-display-large {
+            font-size: 56px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+            margin: 20px 0;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+            position: relative;
+            z-index: 1;
+        }
+
+        .timer-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-bar-preview {
+            width: 100%;
+            height: 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-primary);
+            width: 73%;
+            border-radius: 6px;
+            animation: progressAnimation 2s ease;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes progressAnimation {
+            from { width: 0%; }
+            to { width: 73%; }
+        }
+
+        /* Interactive Demo */
+        .interactive-demo {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 2px dashed var(--primary);
+            position: relative;
+        }
+
+        .demo-button {
+            width: 100%;
+            padding: 20px;
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .demo-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 30px rgba(0, 212, 255, 0.6);
+        }
+
+        .demo-button:active {
+            transform: scale(0.98);
+        }
+
+        .demo-button.success {
+            background: var(--gradient-success);
+            animation: celebrate 0.5s ease;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        /* Progress Indicator */
+        .tutorial-progress {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 32px 0 24px;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-disabled);
+            transition: all 0.4s ease;
+        }
+
+        .progress-dot.active {
+            background: var(--primary);
+            width: 32px;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.6);
+        }
+
+        /* Action Buttons */
+        .tutorial-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: var(--text-primary);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        .btn-hero {
+            background: var(--gradient-gold);
+            color: var(--bg-primary);
+            font-size: 18px;
+            padding: 20px 32px;
+            box-shadow: 0 6px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(255, 215, 0, 0.6);
+        }
+
+        .btn-skip {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            font-size: 14px;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 8px;
+            margin-top: 16px;
+        }
+
+        .btn-skip:hover {
+            color: var(--text-primary);
+        }
+
+        /* Completion Screen */
+        .completion-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .completion-icon {
+            font-size: 140px;
+            margin-bottom: 24px;
+            animation: celebrate 1s ease;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.3) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+
+        .completion-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .completion-text {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .bonus-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--gradient-success);
+            color: var(--bg-primary);
+            padding: 16px 24px;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 24px 0;
+            animation: bounce 0.5s ease;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Roadmap */
+        .roadmap {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 2px solid var(--primary);
+        }
+
+        .roadmap-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .roadmap-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 80px;
+        }
+
+        .roadmap-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Tips */
+        .tip-box {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 204, 0.1) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 24px 0;
+        }
+
+        .tip-title {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tip-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        
+        <!-- Step 0: Эмоциональный хук -->
+        <div class="tutorial-step active" id="step0" data-step="0">
+            <div class="hero-section">
+                <div class="hero-animation">⚡</div>
+                <h1 class="hero-title">Представь, что ты владелец майнинг-фермы</h1>
+                <p class="hero-subtitle">
+                    Ты начнёшь с малого — 3 ASIC и базовая инфраструктура.<br>
+                    Но можешь стать <strong style="color: var(--primary);">крипто-магнатом</strong> с фермой на миллионы TH!
+                </p>
+                
+                <div class="journey-visual">
+                    <div class="journey-path">
+                        <div class="journey-step active" onclick="showJourneyTooltip(0)">
+                            <span>👶</span>
+                            <div class="journey-label">Новичок</div>
+                        </div>
+                        <div class="journey-step" onclick="showJourneyTooltip(1)">
+                            <span>📈</span>
+                            <div class="journey-label">Растёшь</div>
+                        </div>
+                        <div class="journey-step" onclick="showJourneyTooltip(2)">
+                            <span>👑</span>
+                            <div class="journey-label">Лидер</div>
+                        </div>
+                        <div class="journey-step" onclick="showJourneyTooltip(3)">
+                            <span>🏆</span>
+                            <div class="journey-label">Магнат</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-proof">
+                    <strong>10,847+</strong> игроков уже майнят Bitcoin!<br>
+                    <span style="font-size: 12px; color: var(--text-secondary);">Присоединяйся к сообществу!</span>
+                </div>
+
+                <button class="btn btn-hero" onclick="nextStep()" style="width: 100%; margin-top: 32px;">
+                    🚀 Начать путешествие
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 1: Концепция и идеология -->
+        <div class="tutorial-step" id="step1" data-step="1">
+            <div class="step-header">
+                <div class="step-icon">💡</div>
+                <h2 class="step-title">Обучение через игру</h2>
+                <p class="step-description">Изучай реальный майнинг Bitcoin, играя и получая удовольствие</p>
+            </div>
+
+            <div class="value-cards">
+                <div class="value-card" onclick="showValueDetails(0)">
+                    <div class="value-card-icon">🎓</div>
+                    <div class="value-card-title">Обучение</div>
+                    <div class="value-card-desc">Изучаешь основы майнинга через интуитивный интерфейс</div>
+                </div>
+                <div class="value-card" onclick="showValueDetails(1)">
+                    <div class="value-card-icon">👥</div>
+                    <div class="value-card-title">Сообщество</div>
+                    <div class="value-card-desc">Пулы, рефералы, совместные достижения</div>
+                </div>
+                <div class="value-card" onclick="showValueDetails(2)">
+                    <div class="value-card-icon">⚡</div>
+                    <div class="value-card-title">Стратегия</div>
+                    <div class="value-card-desc">Оптимизируй инфраструктуру и энергию</div>
+                </div>
+                <div class="value-card" onclick="showValueDetails(3)">
+                    <div class="value-card-icon">💎</div>
+                    <div class="value-card-title">Достижения</div>
+                    <div class="value-card-desc">Реальные продукты, NFT, статус</div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">💡 Каждый элемент игры отражает реальные процессы майнинга Bitcoin</div>
+                <div class="tip-text">Ты не просто играешь — ты изучаешь крипто-индустрию!</div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" onclick="prevStep()">Назад</button>
+                <button class="btn btn-primary" onclick="nextStep()">Продолжить</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Цели и мотивация -->
+        <div class="tutorial-step" id="step2" data-step="2">
+            <div class="step-header">
+                <div class="step-icon">🎯</div>
+                <h2 class="step-title">Твои цели и возможности</h2>
+                <p class="step-description">Что ты можешь достичь в игре?</p>
+            </div>
+
+            <div style="background: var(--bg-tertiary); border-radius: 16px; padding: 24px; margin: 24px 0; border: 2px solid var(--success);">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 64px;">🏆</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 800; font-size: 20px; margin-bottom: 8px; color: var(--success);">Главная цель: Уровень 10</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">Реальные продукты компании + эксклюзивный NFT-аватар</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goal-grid">
+                <div class="goal-card">
+                    <div class="goal-icon">💰</div>
+                    <div class="goal-title">Максимизируй добычу</div>
+                    <div class="goal-desc">Строй мощную ферму, оптимизируй инфраструктуру</div>
+                </div>
+                <div class="goal-card">
+                    <div class="goal-icon">👥</div>
+                    <div class="goal-title">Создай пул</div>
+                    <div class="goal-desc">Стань лидером, управляй сообществом майнеров</div>
+                </div>
+                <div class="goal-card">
+                    <div class="goal-icon">🎨</div>
+                    <div class="goal-title">Получи аватары</div>
+                    <div class="goal-desc">Редкие NFT с уникальными бонусами</div>
+                </div>
+                <div class="goal-card">
+                    <div class="goal-icon">📊</div>
+                    <div class="goal-title">Топ лидеров</div>
+                    <div class="goal-desc">Войди в топ-100 и получи признание</div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">🚀 Начни с малого</div>
+                <div class="tip-text">Получи стартовый набор, запусти первую сессию, и уже через 6 часов получишь первые игровые BTC!</div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" onclick="prevStep()">Назад</button>
+                <button class="btn btn-primary" onclick="nextStep()">Готов начать!</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Стартовый набор -->
+        <div class="tutorial-step" id="step3" data-step="3">
+            <div class="step-header">
+                <div class="step-icon">🎁</div>
+                <h2 class="step-title">Поздравляем!</h2>
+                <p class="step-description">Ты получил стартовый набор для майнинга!</p>
+            </div>
+
+            <div class="starter-pack">
+                <div class="pack-item">
+                    <div class="item-icon">⚡</div>
+                    <div class="item-info">
+                        <div class="item-name">3× ASIC S21 Pro</div>
+                        <div class="item-details">234 TH каждый • 702 TH всего</div>
+                    </div>
+                </div>
+                <div class="pack-item">
+                    <div class="item-icon">🌍</div>
+                    <div class="item-info">
+                        <div class="item-name">1 Земля</div>
+                        <div class="item-details">Бесплатно • Для инфраструктуры</div>
+                    </div>
+                </div>
+                <div class="pack-item">
+                    <div class="item-icon">⚙️</div>
+                    <div class="item-info">
+                        <div class="item-name">1 Энергостанция</div>
+                        <div class="item-details">100 кВт/час • Генерирует энергию</div>
+                    </div>
+                </div>
+                <div class="pack-item">
+                    <div class="item-icon">🏢</div>
+                    <div class="item-info">
+                        <div class="item-name">1 Дата-центр</div>
+                        <div class="item-details">Вместимость 250 ASIC</div>
+                    </div>
+                </div>
+                <div class="pack-item">
+                    <div class="item-icon">🔋</div>
+                    <div class="item-info">
+                        <div class="item-name">1000 кВт Энергии</div>
+                        <div class="item-details">Хватит на 3-4 сессии</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">✨ Твоя первая ферма готова!</div>
+                <div class="tip-text">Все объекты уже размещены на City Screen. Можешь посмотреть их после tutorial!</div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" onclick="prevStep()">Назад</button>
+                <button class="btn btn-primary" onclick="nextStep()">Посмотреть ферму</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Первая сессия -->
+        <div class="tutorial-step" id="step4" data-step="4">
+            <div class="step-header">
+                <div class="step-icon">⏰</div>
+                <h2 class="step-title">Майнинг уже начался!</h2>
+                <p class="step-description">Первая сессия автозапустилась — ты сразу видишь работу системы!</p>
+            </div>
+
+            <div class="timer-preview">
+                <div class="timer-label">Время до завершения</div>
+                <div class="timer-display-large">5:23:45</div>
+                <div class="progress-bar-preview">
+                    <div class="progress-fill"></div>
+                </div>
+                <div style="margin-top: 20px; font-size: 16px; color: var(--text-primary); position: relative; z-index: 1;">
+                    Ожидаемая добыча: <span style="color: var(--success); font-weight: 700; font-size: 20px;">2.847 BTC</span>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">💡 Система работает автоматически</div>
+                <div class="tip-text">Ты можешь закрыть игру — майнинг продолжится. Вернись через 6 часов и собери награду!</div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" onclick="prevStep()">Назад</button>
+                <button class="btn btn-primary" onclick="nextStep()">Понятно!</button>
+            </div>
+        </div>
+
+        <!-- Step 5: Объяснение цикла -->
+        <div class="tutorial-step" id="step5" data-step="5">
+            <div class="step-header">
+                <div class="step-icon">🔄</div>
+                <h2 class="step-title">Простой цикл</h2>
+                <p class="step-description">3 шага к постоянной добыче BTC</p>
+            </div>
+
+            <div style="background: var(--bg-tertiary); border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 48px; width: 80px; text-align: center;">1️⃣</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px;">Запусти сессию</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">Нажми "Запустить сессию" — система проверит энергию и ASIC</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 48px; width: 80px; text-align: center;">2️⃣</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px;">Подожди 6 часов</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">Майнинг работает автоматически — можешь закрыть игру</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="font-size: 48px; width: 80px; text-align: center;">3️⃣</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 18px; margin-bottom: 8px;">Собери награду</div>
+                        <div style="font-size: 14px; color: var(--text-secondary);">Нажми "Собрать BTC" — получи игровые BTC на свой счёт</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="interactive-demo">
+                <button class="demo-button" id="demoStartBtn" onclick="demoStartSession()">
+                    ⚡ Попробовать запустить сессию
+                </button>
+                <div style="margin-top: 16px; font-size: 14px; color: var(--text-secondary); text-align: center;">
+                    💡 Нажми кнопку выше, чтобы увидеть, как это работает!
+                </div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+            </div>
+
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" onclick="prevStep()">Назад</button>
+                <button class="btn btn-primary" onclick="nextStep()">Продолжить</button>
+            </div>
+        </div>
+
+        <!-- Step 6: Первые действия -->
+        <div class="tutorial-step" id="step6" data-step="6">
+            <div class="step-header">
+                <div class="step-icon">🎮</div>
+                <h2 class="step-title">Управляй своей фермой</h2>
+                <p class="step-description">Больше действий = больше наград!</p>
+            </div>
+
+            <div style="background: var(--bg-tertiary); border-radius: 16px; padding: 24px; margin: 24px 0;">
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 12px; cursor: pointer;" onclick="showStoreDemo()">
+                    <div style="font-size: 40px;">🛒</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">Магазин</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Покупай ASIC, землю, энергию за XP</div>
+                    </div>
+                    <div style="color: var(--primary); font-size: 24px;">→</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 12px; cursor: pointer;" onclick="showPoolDemo()">
+                    <div style="font-size: 40px;">👥</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">Пулы</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Присоединяйся к пулам для бонусов +5% до +25%</div>
+                    </div>
+                    <div style="color: var(--primary); font-size: 24px;">→</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--bg-secondary); border-radius: 12px; cursor: pointer;" onclick="showTasksDemo()">
+                    <div style="font-size: 40px;">✅</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">Задания</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Ежедневные задания дают XP и награды</div>
+                    </div>
+                    <div style="color: var(--primary); font-size: 24px;">→</div>
+                </div>
+            </div>
+
+            <div class="tip-box">
+                <div class="tip-title">💡 Совет</div>
+                <div class="tip-text">После завершения tutorial ты сможешь изучить все эти разделы детально!</div>
+            </div>
+
+            <div class="tutorial-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot active"></div>
+            </div>
+
+            <div class="tutorial-actions">
+                <button class="btn btn-secondary" onclick="prevStep()">Назад</button>
+                <button class="btn btn-primary" onclick="completeTutorial()">Готов начать!</button>
+            </div>
+        </div>
+
+        <!-- Completion Screen -->
+        <div class="tutorial-step" id="completionScreen" data-step="7">
+            <div class="completion-screen">
+                <div class="completion-icon">🎉</div>
+                <h2 class="completion-title">Tutorial завершён!</h2>
+                <p class="completion-text">
+                    Ты готов начать майнинг Bitcoin!<br>
+                    Используй все знания, которые получил, чтобы построить мощную ферму и стать крипто-магнатом!
+                </p>
+                
+                <div class="bonus-badge">
+                    <span>✨</span>
+                    <span>+1000 XP за прохождение tutorial</span>
+                </div>
+
+                <div class="roadmap">
+                    <div class="roadmap-item">
+                        <div class="roadmap-time">Сегодня</div>
+                        <div class="roadmap-text">Собери первые BTC, изучи магазин, присоединись к пулу</div>
+                    </div>
+                    <div class="roadmap-item">
+                        <div class="roadmap-time">Эта неделя</div>
+                        <div class="roadmap-text">Достигни Lv2, открой City Screen, пригласи друзей</div>
+                    </div>
+                    <div class="roadmap-item">
+                        <div class="roadmap-time">Этот месяц</div>
+                        <div class="roadmap-text">Достигни Lv5, создай пул, получи редкие аватары</div>
+                    </div>
+                    <div class="roadmap-item">
+                        <div class="roadmap-time">Lv10</div>
+                        <div class="roadmap-text">Реальные продукты компании + эксклюзивный NFT</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 32px;">
+                    <button class="btn btn-hero" style="width: 100%;" onclick="closeTutorial()">
+                        🚀 Начать майнить!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 6;
+
+        // Initialize tutorial
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('tutorialOverlay');
+            overlay.classList.add('active');
+            showStep(0);
+        });
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.tutorial-step').forEach(stepEl => {
+                stepEl.classList.remove('active');
+            });
+
+            // Show current step
+            let stepEl;
+            if (step === 0) {
+                stepEl = document.getElementById('step0');
+            } else if (step === totalSteps + 1) {
+                stepEl = document.getElementById('completionScreen');
+            } else {
+                stepEl = document.getElementById(`step${step + 1}`);
+            }
+            
+            if (stepEl) {
+                stepEl.classList.add('active');
+            }
+
+            // Update progress
+            document.querySelectorAll('.progress-dot').forEach((dot, idx) => {
+                if (idx <= step) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+
+            currentStep = step;
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            } else {
+                completeTutorial();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        function completeTutorial() {
+            showStep(totalSteps + 1);
+        }
+
+        function closeTutorial() {
+            const overlay = document.getElementById('tutorialOverlay');
+            overlay.classList.remove('active');
+            alert('🎉 Tutorial завершён! +1000 XP\n\nДобро пожаловать в игру!');
+        }
+
+        function demoStartSession() {
+            const button = document.getElementById('demoStartBtn');
+            const originalText = button.textContent;
+            
+            button.textContent = '✅ Сессия запущена!';
+            button.classList.add('success');
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('success');
+                button.disabled = false;
+            }, 2000);
+        }
+
+        function showJourneyTooltip(step) {
+            const labels = ['Новичок: Начало пути', 'Растёшь: Расширяешь ферму', 'Лидер: Создаёшь пул', 'Магнат: Реальные награды'];
+            alert(labels[step]);
+        }
+
+        function showValueDetails(index) {
+            const details = [
+                'Каждый элемент игры отражает реальные процессы майнинга Bitcoin',
+                'Пулы, рефералы и совместные достижения создают сильное сообщество',
+                'Оптимизация инфраструктуры и энергии требует стратегического мышления',
+                'Реальные продукты компании, NFT-аватары и статус в сообществе'
+            ];
+            alert(details[index]);
+        }
+
+        function showStoreDemo() {
+            alert('🛒 В магазине ты сможешь покупать:\n\n• ASIC разных моделей\n• Землю, станции, дата-центры\n• Энергию\n• Premium подписки\n\nВсё за XP или криптовалюту!');
+        }
+
+        function showPoolDemo() {
+            alert('👥 Пулы дают бонусы к добыче:\n\n• Lv1: +5%\n• Lv2: +10%\n• Lv3: +20%\n• Lv4-5: +25%\n\nПрисоединяйся или создай свой!');
+        }
+
+        function showTasksDemo() {
+            alert('✅ Ежедневные задания:\n\n• Check-in\n• Толкни друга\n• Код дня\n• Вопрос дня\n• Проверить Mini App\n\nВыполняй все задания для бонусов!');
+        }
+    </script>
+</body>
+</html>
+
