@@ -195,6 +195,27 @@ const Dashboard: React.FC = () => {
     tg_photo_url: string;
   }> | null>(null);
   const [refKpiLoading, setRefKpiLoading] = useState<boolean>(false);
+  const [ref3KpiData, setRef3KpiData] = useState<Array<{
+    person_id: number;
+    tg_id: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+    current_level: number;
+    effective_ths: string;
+    total_asics: number;
+    total_referrals: number;
+    person_created_at: string;
+    tg_photo_url: string;
+  }> | null>(null);
+  const [ref3KpiLoading, setRef3KpiLoading] = useState<boolean>(false);
+  const [selectedRefKpiUsers, setSelectedRefKpiUsers] = useState<Set<number>>(new Set());
+  const [selectedAsicKpiUsers, setSelectedAsicKpiUsers] = useState<Set<number>>(new Set());
+  const [selectedRef3KpiUsers, setSelectedRef3KpiUsers] = useState<Set<number>>(new Set());
+  const [pushModalOpen, setPushModalOpen] = useState<boolean>(false);
+  const [pushMessage, setPushMessage] = useState<string>('');
+  const [pushSending, setPushSending] = useState<boolean>(false);
+  const [pushModalSource, setPushModalSource] = useState<'ref1' | 'ref3' | 'asic' | null>(null);
   const [allUsersData, setAllUsersData] = useState<{
     users: Array<{
       person_id: number;
@@ -1343,6 +1364,198 @@ const Dashboard: React.FC = () => {
       setRefKpiData([]);
     } finally {
       setRefKpiLoading(false);
+    }
+  };
+
+  const loadRef3KpiData = async (level?: number | null) => {
+    console.log('🚀 loadRef3KpiData вызвана для уровня:', level);
+    setRef3KpiLoading(true);
+    setRef3KpiData(null);
+    
+    // Используем переданный уровень или выбранный уровень из состояния
+    const targetLevel = level !== undefined ? level : selectedKpiLevel;
+    
+    try {
+      // Webhook возвращает всех пользователей с 2 рефералами, фильтрация по уровню на фронтенде
+      let webhookUrl = import.meta.env.DEV 
+        ? '/webhook/game-kpi-3ref'
+        : 'https://n8n-p.blc.am/webhook/game-kpi-3ref';
+      
+      console.log('🔗 Загрузка Ref 3 KPI данных с:', webhookUrl);
+      
+      const response = await fetch(webhookUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      let data = await response.json();
+      console.log('📊 Полученные Ref 3 KPI данные (RAW):', data);
+      console.log('📊 Тип данных:', typeof data);
+      console.log('📊 Является массивом:', Array.isArray(data));
+      
+      // Обрабатываем данные в зависимости от формата ответа
+      let usersList: any[] = [];
+      
+      // Если это массив напрямую
+      if (Array.isArray(data)) {
+        // Проверяем, является ли это массивом объектов с полем json (формат n8n)
+        if (data.length > 0 && data[0] && typeof data[0] === 'object' && data[0].json) {
+          // Это массив объектов вида [{json: {...}}, {json: {...}}]
+          usersList = data.map((item: any) => item.json || item);
+          console.log('✅ Данные - массив объектов с json полем, длина:', usersList.length);
+        } else {
+          // Это обычный массив пользователей
+          usersList = data;
+          console.log('✅ Данные - массив пользователей, длина:', usersList.length);
+        }
+      } 
+      // Если это объект
+      else if (data && typeof data === 'object') {
+        // Проверяем различные варианты структуры
+        if (data.rows && Array.isArray(data.rows)) {
+          usersList = data.rows;
+          console.log('✅ Данные - объект с rows, длина:', usersList.length);
+        } else if (data.result && Array.isArray(data.result)) {
+          usersList = data.result;
+          console.log('✅ Данные - объект с result, длина:', usersList.length);
+        } else if (data.users && Array.isArray(data.users)) {
+          usersList = data.users;
+          console.log('✅ Данные - объект с users, длина:', usersList.length);
+        } else if (data.count !== undefined && data.users && Array.isArray(data.users)) {
+          // Если данные пришли как {users: [...], count: ...}
+          usersList = data.users;
+          console.log('✅ Данные - объект с users и count, длина:', usersList.length);
+        } else if (data.data && Array.isArray(data.data)) {
+          usersList = data.data;
+          console.log('✅ Данные - объект с data, длина:', usersList.length);
+        } else if (Array.isArray(data.json)) {
+          // Если данные пришли как массив объектов с полем json
+          usersList = data.json.map((item: any) => item.json || item);
+          console.log('✅ Данные - объект с json массивом, длина:', usersList.length);
+        } else if (data.person_id !== undefined) {
+          // Если это один объект пользователя (не массив)
+          usersList = [data];
+          console.log('✅ Данные - один объект пользователя, добавлен в массив');
+        } else if (data.json && typeof data.json === 'object') {
+          if (Array.isArray(data.json)) {
+            // Если json - это массив
+            usersList = data.json.map((item: any) => (item.json || item));
+            console.log('✅ Данные - объект с json массивом, длина:', usersList.length);
+          } else if (data.json.person_id !== undefined) {
+            // Если данные обернуты в { json: {...} } (один пользователь)
+            usersList = [data.json];
+            console.log('✅ Данные - объект с json полем (один пользователь), добавлен в массив');
+          }
+        }
+      }
+      
+      console.log('📊 Извлечено пользователей:', usersList.length);
+      if (usersList.length > 0) {
+        console.log('📊 Первый пользователь:', usersList[0]);
+      }
+      
+      // Фильтруем по выбранному уровню на фронтенде
+      let filteredUsers = usersList;
+      if (targetLevel !== null && targetLevel !== undefined) {
+        filteredUsers = usersList.filter((user: any) => {
+          const userLevel = typeof user.current_level === 'string' 
+            ? parseInt(user.current_level, 10) 
+            : parseInt(user.current_level);
+          return userLevel === targetLevel;
+        });
+        console.log(`📊 Отфильтровано по уровню ${targetLevel}:`, filteredUsers.length, 'пользователей');
+      }
+      
+      // Преобразуем строковые значения в числа
+      const formattedUsers = filteredUsers.map((user: any) => ({
+        person_id: typeof user.person_id === 'string' ? parseInt(user.person_id, 10) || 0 : parseInt(user.person_id) || 0,
+        tg_id: String(user.tg_id || ''),
+        username: String(user.username || ''),
+        first_name: String(user.first_name || ''),
+        last_name: String(user.last_name || ''),
+        current_level: typeof user.current_level === 'string' ? parseInt(user.current_level, 10) || 0 : parseInt(user.current_level) || 0,
+        effective_ths: String(user.effective_ths || '0'),
+        total_asics: typeof user.total_asics === 'string' ? parseInt(user.total_asics, 10) || 0 : parseInt(user.total_asics) || 0,
+        total_referrals: typeof user.total_referrals === 'string' ? parseInt(user.total_referrals, 10) || 0 : parseInt(user.total_referrals) || 0,
+        person_created_at: user.person_created_at || null,
+        tg_photo_url: user.tg_photo_url || null
+      }));
+      
+      setRef3KpiData(formattedUsers);
+      console.log('✅ Ref 3 KPI данные загружены:', formattedUsers.length, 'пользователей');
+    } catch (e: any) {
+      console.error('❌ Ошибка загрузки Ref 3 KPI данных:', e);
+      setRef3KpiData([]);
+    } finally {
+      setRef3KpiLoading(false);
+    }
+  };
+
+  const sendPushNotifications = async (tgIds: string[], message: string) => {
+    console.log('🚀 sendPushNotifications вызвана');
+    console.log('📊 TG IDs:', tgIds);
+    console.log('💬 Сообщение:', message);
+    
+    setPushSending(true);
+    
+    try {
+      let webhookUrl = import.meta.env.DEV
+        ? '/webhook/game-push-1ref'
+        : 'https://n8n-p.blc.am/webhook/game-push-1ref';
+      
+      // Для GET запроса передаем данные через query параметры
+      // Массив tg_ids передаем как JSON строку
+      const params = new URLSearchParams({
+        tg_ids: JSON.stringify(tgIds),
+        message: message
+      });
+      
+      webhookUrl += `?${params.toString()}`;
+      
+      console.log('🔗 Отправка push-уведомлений на:', webhookUrl);
+      console.log('📦 Данные:', { tg_ids: tgIds, message: message });
+      
+      const response = await fetch(webhookUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Ошибка ответа:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Push-уведомления отправлены:', data);
+      
+      // Закрываем модальное окно и очищаем выбор
+                setPushModalOpen(false);
+                setPushModalSource(null);
+                setPushMessage('');
+                // Очищаем выбранных пользователей в зависимости от источника
+                if (pushModalSource === 'ref1') {
+                  setSelectedRefKpiUsers(new Set());
+                } else if (pushModalSource === 'ref3') {
+                  setSelectedRef3KpiUsers(new Set());
+                } else if (pushModalSource === 'asic') {
+                  setSelectedAsicKpiUsers(new Set());
+                }
+      
+      alert(`Push-уведомления успешно отправлены ${tgIds.length} пользователям!`);
+    } catch (e: any) {
+      console.error('❌ Ошибка отправки push-уведомлений:', e);
+      alert(`Ошибка отправки push-уведомлений: ${e.message}`);
+    } finally {
+      setPushSending(false);
     }
   };
 
@@ -5805,6 +6018,11 @@ const Dashboard: React.FC = () => {
                       // Скрываем ASIC KPI и Ref KPI данные при переключении на другой уровень
                       setAsicKpiData(null);
                       setRefKpiData(null);
+                      setRef3KpiData(null);
+                      // Очищаем выбранных пользователей
+                      setSelectedAsicKpiUsers(new Set());
+                      setSelectedRefKpiUsers(new Set());
+                      setSelectedRef3KpiUsers(new Set());
                     }}
                     className={`p-4 rounded-xl shadow-lg cursor-pointer transition-all hover:shadow-xl border-2 ${
                       isSelected
@@ -5862,6 +6080,11 @@ const Dashboard: React.FC = () => {
                     // Скрываем ASIC KPI и Ref KPI данные при закрытии детального окна
                     setAsicKpiData(null);
                     setRefKpiData(null);
+                    setRef3KpiData(null);
+                    // Очищаем выбранных пользователей
+                    setSelectedAsicKpiUsers(new Set());
+                    setSelectedRefKpiUsers(new Set());
+                    setSelectedRef3KpiUsers(new Set());
                   }}
                   className={`px-4 py-2 rounded-lg ${isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}
                 >
@@ -5887,7 +6110,7 @@ const Dashboard: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <button
                         onClick={() => {
                           loadAsicKpiData(selectedKpiLevel);
@@ -5943,53 +6166,169 @@ const Dashboard: React.FC = () => {
                           </>
                         )}
                       </button>
+                      
+                      <button
+                        onClick={() => {
+                          loadRef3KpiData(selectedKpiLevel);
+                        }}
+                        disabled={ref3KpiLoading}
+                        className={`px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                          ref3KpiLoading
+                            ? 'bg-gray-500 cursor-not-allowed text-white'
+                            : isDark
+                            ? 'bg-green-700 hover:bg-green-600 text-white'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                        }`}
+                      >
+                        {ref3KpiLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Загрузка...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span>KPI 3 ref</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                     
                     {/* ASIC KPI Results */}
-                    {asicKpiData && asicKpiData.length > 0 && (
-                      <div className={`mt-6 p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            Пользователи, которым не хватает 1 ASIC для перехода на следующий уровень
-                          </h3>
-                          <button
-                            onClick={() => setAsicKpiData(null)}
-                            className={`px-3 py-1 rounded text-sm ${
-                              isDark 
-                                ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
-                                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                            }`}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        <div className="mb-4">
-                          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            Найдено: <span className="font-semibold">{asicKpiData.length}</span> пользователей
-                          </p>
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                                <th className={`text-left py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ID</th>
-                                <th className={`text-left py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Пользователь</th>
-                                <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Уровень</th>
-                                <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ASIC</th>
-                                <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Нужно для след. уровня</th>
-                                <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Не хватает</th>
-                                <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Прогресс</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {asicKpiData.map((user, idx) => (
-                                <tr 
-                                  key={user.person_id || idx} 
-                                  className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'}`}
+                    {asicKpiData && asicKpiData.length > 0 && (() => {
+                      const handleAsicUserSelect = (personId: number, e?: React.MouseEvent) => {
+                        if (e) {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }
+                        setSelectedAsicKpiUsers(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(personId)) {
+                            newSet.delete(personId);
+                          } else {
+                            newSet.add(personId);
+                          }
+                          return newSet;
+                        });
+                      };
+
+                      const handleAsicSelectAll = () => {
+                        if (selectedAsicKpiUsers.size === asicKpiData.length) {
+                          setSelectedAsicKpiUsers(new Set());
+                        } else {
+                          setSelectedAsicKpiUsers(new Set(asicKpiData.map(u => u.person_id)));
+                        }
+                      };
+
+                      const handleOpenAsicPushModal = () => {
+                        if (selectedAsicKpiUsers.size === 0) {
+                          alert('Пожалуйста, выберите хотя бы одного пользователя');
+                          return;
+                        }
+                        setPushMessage('');
+                        setPushModalSource('asic');
+                        setPushModalOpen(true);
+                      };
+
+                      return (
+                        <div className={`mt-6 p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              Пользователи, которым не хватает 1 ASIC для перехода на следующий уровень
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              {selectedAsicKpiUsers.size > 0 && (
+                                <button
+                                  onClick={handleOpenAsicPushModal}
+                                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                    isDark
+                                      ? 'bg-blue-700 hover:bg-blue-600 text-white'
+                                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  }`}
                                 >
-                                  <td className={`py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    {user.person_id}
-                                  </td>
+                                  Отправить пуш ({selectedAsicKpiUsers.size})
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setAsicKpiData(null);
+                                  setSelectedAsicKpiUsers(new Set());
+                                }}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  isDark 
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
+                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                }`}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mb-3 flex items-center gap-2">
+                            <button
+                              onClick={handleAsicSelectAll}
+                              className={`text-sm px-3 py-1 rounded ${
+                                isDark
+                                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                              }`}
+                            >
+                              {selectedAsicKpiUsers.size === asicKpiData.length ? 'Снять все' : 'Выбрать все'}
+                            </button>
+                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Выбрано: {selectedAsicKpiUsers.size} из {asicKpiData.length}
+                            </span>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} w-12`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedAsicKpiUsers.size === asicKpiData.length && asicKpiData.length > 0}
+                                      onChange={handleAsicSelectAll}
+                                      className="cursor-pointer"
+                                    />
+                                  </th>
+                                  <th className={`text-left py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ID</th>
+                                  <th className={`text-left py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Пользователь</th>
+                                  <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Уровень</th>
+                                  <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ASIC</th>
+                                  <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Нужно для след. уровня</th>
+                                  <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Не хватает</th>
+                                  <th className={`text-center py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Прогресс</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {asicKpiData.map((user, idx) => (
+                                  <tr 
+                                    key={user.person_id || idx} 
+                                    className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'}`}
+                                  >
+                                    <td 
+                                      className="py-2 px-2 text-center"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleAsicUserSelect(user.person_id, e);
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedAsicKpiUsers.has(user.person_id)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          handleAsicUserSelect(user.person_id, e);
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="cursor-pointer w-4 h-4"
+                                      />
+                                    </td>
+                                    <td className={`py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                      {user.person_id}
+                                    </td>
                                   <td className={`py-2 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     <div className="flex items-center gap-2">
                                       {user.tg_photo_url && (
@@ -6061,7 +6400,8 @@ const Dashboard: React.FC = () => {
                           </table>
                         </div>
                       </div>
-                    )}
+                      );
+                    })()}
                     
                     {/* Ref KPI Results */}
                     {refKpiData && refKpiData.length > 0 && (() => {
@@ -6081,27 +6421,98 @@ const Dashboard: React.FC = () => {
                         }
                       };
 
+                      const handleUserSelect = (personId: number, e?: React.MouseEvent) => {
+                        if (e) {
+                          e.stopPropagation(); // Предотвращаем открытие деталей пользователя
+                          e.preventDefault();
+                        }
+                        setSelectedRefKpiUsers(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(personId)) {
+                            newSet.delete(personId);
+                          } else {
+                            newSet.add(personId);
+                          }
+                          return newSet;
+                        });
+                      };
+
+                      const handleSelectAll = () => {
+                        if (selectedRefKpiUsers.size === refKpiData.length) {
+                          setSelectedRefKpiUsers(new Set());
+                        } else {
+                          setSelectedRefKpiUsers(new Set(refKpiData.map(u => u.person_id)));
+                        }
+                      };
+
+                      const handleOpenPushModal = () => {
+                        if (selectedRefKpiUsers.size === 0) {
+                          alert('Пожалуйста, выберите хотя бы одного пользователя');
+                          return;
+                        }
+                        setPushMessage(''); // Сброс сообщения при открытии
+                        setPushModalSource('ref1');
+                        setPushModalOpen(true);
+                      };
+
                       return (
                         <div className={`mt-6 p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
                           <div className="flex items-center justify-between mb-4">
                             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                               Пользователи на уровне {selectedKpiLevel}, которые еще никого не пригласили
                             </h3>
+                            <div className="flex items-center gap-2">
+                              {selectedRefKpiUsers.size > 0 && (
+                                <button
+                                  onClick={handleOpenPushModal}
+                                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                    isDark
+                                      ? 'bg-blue-700 hover:bg-blue-600 text-white'
+                                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  }`}
+                                >
+                                  Отправить пуш ({selectedRefKpiUsers.size})
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setRefKpiData(null)}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  isDark 
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
+                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                }`}
+                              >
+                                Скрыть
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mb-3 flex items-center gap-2">
                             <button
-                              onClick={() => setRefKpiData(null)}
-                              className={`px-3 py-1 rounded text-sm ${
-                                isDark 
-                                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
+                              onClick={handleSelectAll}
+                              className={`text-sm px-3 py-1 rounded ${
+                                isDark
+                                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                                   : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                               }`}
                             >
-                              Скрыть
+                              {selectedRefKpiUsers.size === refKpiData.length ? 'Снять все' : 'Выбрать все'}
                             </button>
+                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Выбрано: {selectedRefKpiUsers.size} из {refKpiData.length}
+                            </span>
                           </div>
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} w-12`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedRefKpiUsers.size === refKpiData.length && refKpiData.length > 0}
+                                      onChange={handleSelectAll}
+                                      className="cursor-pointer"
+                                    />
+                                  </th>
                                   <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ID</th>
                                   <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Аватар</th>
                                   <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} max-w-[200px]`}>Имя</th>
@@ -6117,13 +6528,38 @@ const Dashboard: React.FC = () => {
                                 {refKpiData.map((user) => (
                                   <tr 
                                     key={user.person_id} 
-                                    className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-800/50' : 'border-gray-200 hover:bg-gray-50'} transition-colors cursor-pointer`}
-                                    onClick={() => loadUserDetails(user.person_id)}
+                                    className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-800/50' : 'border-gray-200 hover:bg-gray-50'} transition-colors`}
                                   >
-                                    <td className={`py-2 px-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <td 
+                                      className="py-2 px-2 text-center"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUserSelect(user.person_id);
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedRefKpiUsers.has(user.person_id)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          handleUserSelect(user.person_id);
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                        }}
+                                        className="cursor-pointer w-4 h-4"
+                                      />
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {user.person_id}
                                     </td>
-                                    <td className="py-2 px-2">
+                                    <td 
+                                      className="py-2 px-2 cursor-pointer"
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {user.tg_photo_url ? (
                                         <img 
                                           src={user.tg_photo_url} 
@@ -6146,7 +6582,10 @@ const Dashboard: React.FC = () => {
                                         </div>
                                       )}
                                     </td>
-                                    <td className={`py-2 px-2 ${isDark ? 'text-gray-300' : 'text-gray-700'} max-w-[200px]`}>
+                                    <td 
+                                      className={`py-2 px-2 ${isDark ? 'text-gray-300' : 'text-gray-700'} max-w-[200px] cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       <div className="flex flex-col">
                                         <span className="font-medium truncate">{user.first_name} {user.last_name}</span>
                                         {user.username && (
@@ -6154,10 +6593,16 @@ const Dashboard: React.FC = () => {
                                         )}
                                       </div>
                                     </td>
-                                    <td className={`py-2 px-2 font-mono text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} max-w-[120px] truncate`}>
+                                    <td 
+                                      className={`py-2 px-2 font-mono text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} max-w-[120px] truncate cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {user.tg_id || '—'}
                                     </td>
-                                    <td className={`py-2 px-2 text-center`}>
+                                    <td 
+                                      className={`py-2 px-2 text-center cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                                         user.current_level === 0
                                           ? isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
@@ -6170,16 +6615,272 @@ const Dashboard: React.FC = () => {
                                         {user.current_level}
                                       </span>
                                     </td>
-                                    <td className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                    <td 
+                                      className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {numberFormat(parseFloat(user.effective_ths || '0'))}
                                     </td>
-                                    <td className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                                    <td 
+                                      className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {user.total_asics || 0}
                                     </td>
-                                    <td className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                                    <td 
+                                      className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-red-400' : 'text-red-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {user.total_referrals || 0}
                                     </td>
-                                    <td className={`py-2 px-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <td 
+                                      className={`py-2 px-2 ${isDark ? 'text-gray-400' : 'text-gray-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {user.person_created_at ? formatDate(user.person_created_at) : '—'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
+                    {/* Ref 3 KPI Results */}
+                    {ref3KpiData && ref3KpiData.length > 0 && (() => {
+                      const formatDate = (dateString: string) => {
+                        if (!dateString) return 'N/A';
+                        try {
+                          const date = new Date(dateString);
+                          return date.toLocaleDateString('ru-RU', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          });
+                        } catch (e) {
+                          return 'N/A';
+                        }
+                      };
+
+                      const handleRef3UserSelect = (personId: number, e?: React.MouseEvent) => {
+                        if (e) {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }
+                        setSelectedRef3KpiUsers(prev => {
+                          const newSet = new Set(prev);
+                          if (newSet.has(personId)) {
+                            newSet.delete(personId);
+                          } else {
+                            newSet.add(personId);
+                          }
+                          return newSet;
+                        });
+                      };
+
+                      const handleRef3SelectAll = () => {
+                        if (selectedRef3KpiUsers.size === ref3KpiData.length) {
+                          setSelectedRef3KpiUsers(new Set());
+                        } else {
+                          setSelectedRef3KpiUsers(new Set(ref3KpiData.map(u => u.person_id)));
+                        }
+                      };
+
+                      const handleOpenRef3PushModal = () => {
+                        if (selectedRef3KpiUsers.size === 0) {
+                          alert('Пожалуйста, выберите хотя бы одного пользователя');
+                          return;
+                        }
+                        setPushMessage('');
+                        setPushModalSource('ref3');
+                        setPushModalOpen(true);
+                      };
+
+                      return (
+                        <div className={`mt-6 p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800/50 border border-gray-700' : 'bg-gray-50 border border-gray-200'}`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              Пользователи на уровне {selectedKpiLevel}, которые пригласили ровно 2 реферала
+                            </h3>
+                            <div className="flex items-center gap-2">
+                              {selectedRef3KpiUsers.size > 0 && (
+                                <button
+                                  onClick={handleOpenRef3PushModal}
+                                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                    isDark
+                                      ? 'bg-blue-700 hover:bg-blue-600 text-white'
+                                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                                  }`}
+                                >
+                                  Отправить пуш ({selectedRef3KpiUsers.size})
+                                </button>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setRef3KpiData(null);
+                                  setSelectedRef3KpiUsers(new Set());
+                                }}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  isDark 
+                                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' 
+                                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                                }`}
+                              >
+                                Скрыть
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mb-3 flex items-center gap-2">
+                            <button
+                              onClick={handleRef3SelectAll}
+                              className={`text-sm px-3 py-1 rounded ${
+                                isDark
+                                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                              }`}
+                            >
+                              {selectedRef3KpiUsers.size === ref3KpiData.length ? 'Снять все' : 'Выбрать все'}
+                            </button>
+                            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                              Выбрано: {selectedRef3KpiUsers.size} из {ref3KpiData.length}
+                            </span>
+                          </div>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} w-12`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedRef3KpiUsers.size === ref3KpiData.length && ref3KpiData.length > 0}
+                                      onChange={handleRef3SelectAll}
+                                      className="cursor-pointer"
+                                    />
+                                  </th>
+                                  <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ID</th>
+                                  <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Аватар</th>
+                                  <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} max-w-[200px]`}>Имя</th>
+                                  <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'} max-w-[120px]`}>TG ID</th>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Уровень</th>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Th</th>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>ASIC</th>
+                                  <th className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Рефералов</th>
+                                  <th className={`py-2 px-2 text-left font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Дата регистрации</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {ref3KpiData.map((user) => (
+                                  <tr 
+                                    key={user.person_id} 
+                                    className={`border-b ${isDark ? 'border-gray-700 hover:bg-gray-800/50' : 'border-gray-200 hover:bg-gray-50'} transition-colors`}
+                                  >
+                                    <td 
+                                      className="py-2 px-2 text-center"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRef3UserSelect(user.person_id, e);
+                                      }}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedRef3KpiUsers.has(user.person_id)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          handleRef3UserSelect(user.person_id, e);
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="cursor-pointer w-4 h-4"
+                                      />
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {user.person_id}
+                                    </td>
+                                    <td 
+                                      className="py-2 px-2 cursor-pointer"
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {user.tg_photo_url ? (
+                                        <img 
+                                          src={user.tg_photo_url} 
+                                          alt={user.username || user.first_name}
+                                          className="w-8 h-8 rounded-full"
+                                          loading="lazy"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.style.display = 'none';
+                                            target.onerror = null;
+                                          }}
+                                        />
+                                      ) : (
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                                          <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            {user.first_name?.[0]?.toUpperCase() || '?'}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 ${isDark ? 'text-gray-300' : 'text-gray-700'} max-w-[200px] cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      <div className="flex flex-col">
+                                        <span className="font-medium truncate">{user.first_name} {user.last_name}</span>
+                                        {user.username && (
+                                          <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'} truncate`}>@{user.username}</span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 font-mono text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'} max-w-[120px] truncate cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {user.tg_id || '—'}
+                                    </td>
+                                    <td 
+                                      className="py-2 px-2 text-center cursor-pointer"
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                        user.current_level === 0
+                                          ? isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                                          : user.current_level <= 3
+                                          ? isDark ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-800'
+                                          : user.current_level <= 6
+                                          ? isDark ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-800'
+                                          : isDark ? 'bg-orange-900/50 text-orange-300' : 'bg-orange-100 text-orange-800'
+                                      }`}>
+                                        {user.current_level}
+                                      </span>
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {numberFormat(parseFloat(user.effective_ths || '0'))}
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-indigo-400' : 'text-indigo-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {user.total_asics || 0}
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 text-center font-semibold ${isDark ? 'text-green-400' : 'text-green-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
+                                      {user.total_referrals || 0}
+                                    </td>
+                                    <td 
+                                      className={`py-2 px-2 ${isDark ? 'text-gray-400' : 'text-gray-600'} cursor-pointer`}
+                                      onClick={() => loadUserDetails(user.person_id)}
+                                    >
                                       {user.person_created_at ? formatDate(user.person_created_at) : '—'}
                                     </td>
                                   </tr>
@@ -8152,6 +8853,162 @@ const Dashboard: React.FC = () => {
         </div>
       )}
       
+      {/* Модальное окно для отправки push-уведомлений */}
+      {pushModalOpen && pushModalSource && (() => {
+        // Определяем источник данных и выбранных пользователей
+        let selectedUsers: any[] = [];
+        let selectedCount = 0;
+        let sourceData: any[] = [];
+
+        if (pushModalSource === 'ref1' && refKpiData) {
+          sourceData = refKpiData;
+          selectedUsers = refKpiData.filter(user => selectedRefKpiUsers.has(user.person_id));
+          selectedCount = selectedRefKpiUsers.size;
+        } else if (pushModalSource === 'ref3' && ref3KpiData) {
+          sourceData = ref3KpiData;
+          selectedUsers = ref3KpiData.filter(user => selectedRef3KpiUsers.has(user.person_id));
+          selectedCount = selectedRef3KpiUsers.size;
+        } else if (pushModalSource === 'asic' && asicKpiData) {
+          sourceData = asicKpiData;
+          selectedUsers = asicKpiData.filter(user => selectedAsicKpiUsers.has(user.person_id));
+          selectedCount = selectedAsicKpiUsers.size;
+        }
+
+        if (selectedCount === 0) {
+          return null;
+        }
+
+        return (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => {
+              setPushModalOpen(false);
+              setPushModalSource(null);
+            }}
+          >
+            <div 
+              className={`max-w-2xl w-full rounded-xl shadow-2xl p-6 ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Отправить push-уведомления
+                </h3>
+                <button
+                  onClick={() => {
+                    setPushModalOpen(false);
+                    setPushModalSource(null);
+                  }}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isDark 
+                      ? 'hover:bg-gray-700 text-gray-300' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+                  Выбрано пользователей: <span className="font-semibold">{selectedCount}</span>
+                </p>
+                <div className={`max-h-40 overflow-y-auto p-3 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedUsers.map(user => (
+                      <span 
+                        key={user.person_id}
+                        className={`px-2 py-1 rounded text-xs ${isDark ? 'bg-gray-600 text-gray-300' : 'bg-gray-200 text-gray-700'}`}
+                      >
+                        {user.first_name} {user.last_name || ''} (@{user.username || user.tg_id})
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+            <div className="mb-6">
+              <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                Сообщение для отправки:
+              </label>
+              <textarea
+                value={pushMessage}
+                onChange={(e) => setPushMessage(e.target.value)}
+                placeholder="Введите текст push-уведомления..."
+                rows={6}
+                className={`w-full p-3 rounded-lg border ${
+                  isDark 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              />
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                {pushMessage.length} символов
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setPushModalOpen(false);
+                  setPushModalSource(null);
+                }}
+                disabled={pushSending}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  isDark
+                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                } ${pushSending ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                Отмена
+              </button>
+              <button
+                onClick={async () => {
+                  if (!pushMessage.trim()) {
+                    alert('Пожалуйста, введите сообщение');
+                    return;
+                  }
+                  
+                  const tgIds = selectedUsers.map(user => user.tg_id).filter((id): id is string => id !== undefined && id !== null && id.trim() !== '');
+                  
+                  if (tgIds.length === 0) {
+                    alert('У выбранных пользователей нет TG ID');
+                    return;
+                  }
+                  
+                  await sendPushNotifications(tgIds, pushMessage.trim());
+                }}
+                disabled={pushSending || !pushMessage.trim() || selectedCount === 0}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                  pushSending || !pushMessage.trim()
+                    ? 'bg-gray-500 cursor-not-allowed text-white'
+                    : isDark
+                    ? 'bg-blue-700 hover:bg-blue-600 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {pushSending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Отправка...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    <span>Отправить пуш</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+        );
+      })()}
+
       {/* Модальное окно сравнительного графика майнинга */}
       {comparisonModalOpen && eventsData && eventsData.events['mining_started'] && eventsData.events['mining_claimed'] && (
         <div 
