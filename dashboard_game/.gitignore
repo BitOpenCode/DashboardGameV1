@@ -27,3 +27,21 @@ dist-ssr
 # Data files with user information (not safe for repository)
 final.json
 *.json.bak
+
+# N8N workflow files (not part of the application)
+n8n_*.json
+n8n_workflow_*.json
+n8n_code_*.js
+
+# SQL query files (for reference only, not part of the application)
+sql_query_*.sql
+
+# Temporary and data files
+result.json
+sh1.json
+schema.json
+leaderboard_webhook.json
+fix_http_errors.js
+
+# Tutorial HTML files (not part of the application)
+tutorial*.html
