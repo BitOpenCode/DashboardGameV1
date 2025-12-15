@@ -9518,15 +9518,9 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-<<<<<<< HEAD
-        )
-      })()}
-      
-=======
         );
       })()}
 
->>>>>>> 6be2938fd59d1c683b78e29c9a686750e6132ae6
       {/* Модальное окно сравнительного графика майнинга */}
       {comparisonModalOpen && eventsData && eventsData.events['mining_started'] && eventsData.events['mining_claimed'] && (
         <div 
