@@ -1,6 +1,53 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
-import { RefreshCw, Users, TrendingUp } from 'lucide-react';
+import { 
+  RefreshCw, Users, TrendingUp, Pickaxe, Coins, ShoppingCart, Calendar, 
+  DollarSign, ArrowLeftRight, Target, CheckCircle, Megaphone, Smartphone, 
+  Star, Repeat, Monitor, Laptop, Building2, Zap, Mountain, Wallet, 
+  CalendarDays, Diamond, Gamepad2, Trophy, Medal, ThumbsUp, Heart, 
+  Pointer, PartyPopper, Globe, Gift, UserPlus, CreditCard, Award,
+  Search, ChevronRight, X
+} from 'lucide-react';
+
+// Icon component for events
+const EventIcon: React.FC<{ name: string; className?: string; color?: string }> = ({ name, className = "w-5 h-5", color }) => {
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'mining': <Pickaxe className={className} style={{ color }} />,
+    'coins': <Coins className={className} style={{ color }} />,
+    'cart': <ShoppingCart className={className} style={{ color }} />,
+    'calendar': <Calendar className={className} style={{ color }} />,
+    'dollar': <DollarSign className={className} style={{ color }} />,
+    'swap': <ArrowLeftRight className={className} style={{ color }} />,
+    'target': <Target className={className} style={{ color }} />,
+    'check': <CheckCircle className={className} style={{ color }} />,
+    'megaphone': <Megaphone className={className} style={{ color }} />,
+    'phone': <Smartphone className={className} style={{ color }} />,
+    'star': <Star className={className} style={{ color }} />,
+    'exchange': <Repeat className={className} style={{ color }} />,
+    'monitor': <Monitor className={className} style={{ color }} />,
+    'laptop': <Laptop className={className} style={{ color }} />,
+    'building': <Building2 className={className} style={{ color }} />,
+    'zap': <Zap className={className} style={{ color }} />,
+    'mountain': <Mountain className={className} style={{ color }} />,
+    'wallet': <Wallet className={className} style={{ color }} />,
+    'calendar-days': <CalendarDays className={className} style={{ color }} />,
+    'diamond': <Diamond className={className} style={{ color }} />,
+    'gamepad': <Gamepad2 className={className} style={{ color }} />,
+    'trophy': <Trophy className={className} style={{ color }} />,
+    'medal': <Medal className={className} style={{ color }} />,
+    'thumb': <ThumbsUp className={className} style={{ color }} />,
+    'heart': <Heart className={className} style={{ color }} />,
+    'pointer': <Pointer className={className} style={{ color }} />,
+    'party': <PartyPopper className={className} style={{ color }} />,
+    'globe': <Globe className={className} style={{ color }} />,
+    'gift': <Gift className={className} style={{ color }} />,
+    'users': <Users className={className} style={{ color }} />,
+    'user-plus': <UserPlus className={className} style={{ color }} />,
+    'card': <CreditCard className={className} style={{ color }} />,
+    'award': <Award className={className} style={{ color }} />,
+  };
+  return <>{iconMap[name] || <Zap className={className} style={{ color }} />}</>;
+};
 import { fetchDashboardStats, type DashboardStats } from '../../utils/n8n';
 import {
   Chart as ChartJS,
@@ -93,6 +140,9 @@ const Dashboard: React.FC = () => {
   const [modalTimeFilter, setModalTimeFilter] = useState<'all' | '7' | '30'>('all');
   const [comparisonModalOpen, setComparisonModalOpen] = useState(false);
   const [comparisonTimeFilter, setComparisonTimeFilter] = useState<'all' | '7' | '30'>('all');
+  const [correlationTimeFilter, setCorrelationTimeFilter] = useState<'all' | '7' | '30'>('all');
+  const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
+  const [eventsInitialized, setEventsInitialized] = useState<boolean>(false);
   const [referralsData, setReferralsData] = useState<{
     totalInvites: number;
     topReferrers: { username: string; count: number }[];
@@ -542,7 +592,9 @@ const Dashboard: React.FC = () => {
       
       const response = await fetch(webhookUrl, {
         method: 'GET',
-        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       console.log('📡 Response status:', response.status);
@@ -615,7 +667,9 @@ const Dashboard: React.FC = () => {
       
       const response = await fetch(webhookUrl, {
         method: 'GET',
-        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       
       console.log('📡 Response status:', response.status);
@@ -3277,17 +3331,17 @@ const Dashboard: React.FC = () => {
       }
     } else {
       // Дневной график → прогноз на 7 дней
-      for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 7; i++) {
         const dayIndex = n + i;
         const predictedValue = predictDay(dayIndex);
         
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + i + 1);
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + i + 1);
         
-        forecastData.push({
-          date: format(futureDate, 'dd.MM.yy'),
-          count: predictedValue
-        });
+      forecastData.push({
+        date: format(futureDate, 'dd.MM.yy'),
+        count: predictedValue
+      });
       }
     }
     
@@ -3398,6 +3452,106 @@ const Dashboard: React.FC = () => {
       events: filteredEvents
     };
   }, [eventsData, eventsTimeFilter]);
+
+  // Фильтрованные данные для графика корреляции
+  const filteredCorrelationData = useMemo(() => {
+    if (!eventsData) return null;
+
+    const formatDateDDMMYY = (date: Date) => {
+      const dd = String(date.getUTCDate()).padStart(2, '0');
+      const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const yy = String(date.getUTCFullYear()).slice(-2);
+      return `${dd}.${mm}.${yy}`;
+    };
+
+    const aggregateData = (data: { date: string; count: number }[], filter: 'all' | '7' | '30') => {
+      if (filter === '7') {
+        // Группировка по неделям
+        const countsByWeek = new Map<string, { count: number; weekStart: Date; weekEnd: Date }>();
+        
+        data.forEach(day => {
+          const [dayStr, monthStr, yearStr] = day.date.split('.');
+          const dayDate = new Date(2000 + parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr));
+          
+          const weekStart = new Date(dayDate);
+          weekStart.setUTCDate(dayDate.getUTCDate() - dayDate.getUTCDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+          
+          const weekKey = `${formatDateDDMMYY(weekStart)}–${formatDateDDMMYY(weekEnd)}`;
+          
+          if (!countsByWeek.has(weekKey)) {
+            countsByWeek.set(weekKey, { count: 0, weekStart, weekEnd });
+          }
+          const weekData = countsByWeek.get(weekKey)!;
+          weekData.count += day.count;
+        });
+        
+        return Array.from(countsByWeek.values())
+          .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
+          .map(data => ({
+            date: `${formatDateDDMMYY(data.weekStart)}–${formatDateDDMMYY(data.weekEnd)}`,
+            count: data.count
+          }));
+      } else if (filter === '30') {
+        // Группировка по месяцам
+        const countsByMonth = new Map<string, number>();
+        
+        data.forEach(day => {
+          const [dayStr, monthStr, yearStr] = day.date.split('.');
+          const dayDate = new Date(2000 + parseInt(yearStr), parseInt(monthStr) - 1, parseInt(dayStr));
+          
+          const mm = String(dayDate.getUTCMonth() + 1).padStart(2, '0');
+          const yy = String(dayDate.getUTCFullYear()).slice(-2);
+          const monthKey = `${mm}.${yy}`;
+          
+          countsByMonth.set(monthKey, (countsByMonth.get(monthKey) || 0) + day.count);
+        });
+        
+        return Array.from(countsByMonth.entries())
+          .map(([month, count]) => {
+            const [mm, yy] = month.split('.').map(Number);
+            const startTime = new Date(2000 + yy, mm - 1, 1).getTime();
+            return { date: month, count, _startTime: startTime };
+          })
+          .sort((a, b) => a._startTime - b._startTime)
+          .map(({ date, count }) => ({ date, count }));
+      }
+      
+      return data;
+    };
+
+    // Агрегируем каждый event по фильтру времени
+    const filteredEvents: { [key: string]: { date: string; count: number }[] } = {};
+    Object.keys(eventsData.events).forEach(eventName => {
+      filteredEvents[eventName] = aggregateData(eventsData.events[eventName], correlationTimeFilter);
+    });
+
+    // Получаем общие даты для всех событий
+    const allDates = new Set<string>();
+    Object.values(filteredEvents).forEach(eventData => {
+      eventData.forEach(day => allDates.add(day.date));
+    });
+    const sortedDates = Array.from(allDates).sort((a, b) => {
+      const parseDate = (dateStr: string) => {
+        if (dateStr.includes('–')) {
+          const [start] = dateStr.split('–');
+          const [dd, mm, yy] = start.split('.');
+          return new Date(2000 + parseInt(yy), parseInt(mm) - 1, parseInt(dd)).getTime();
+        } else if (dateStr.includes('.')) {
+          const [mm, yy] = dateStr.split('.');
+          return new Date(2000 + parseInt(yy), parseInt(mm) - 1, 1).getTime();
+        }
+        return 0;
+      };
+      return parseDate(a) - parseDate(b);
+    });
+
+    return {
+      dates: sortedDates,
+      events: filteredEvents
+    };
+  }, [eventsData, correlationTimeFilter]);
 
   // Фильтрованные данные для модального окна
   const filteredModalData = useMemo(() => {
@@ -3536,6 +3690,18 @@ const Dashboard: React.FC = () => {
       };
     }
   }, [userDetails]);
+
+  // Инициализируем выбранные события только один раз при первой загрузке данных
+  useEffect(() => {
+    if (eventsData && eventsData.events && Object.keys(eventsData.events).length > 0 && !eventsInitialized) {
+      const excludedEvents = ['starter_pack_granted', 'person_created', 'pool_member_bonus', 'pool_owner_commission'];
+      const eventKeys = Object.keys(eventsData.events)
+        .filter(eventName => !excludedEvents.includes(eventName))
+        .slice(0, 20);
+      setSelectedEvents(new Set(eventKeys));
+      setEventsInitialized(true);
+    }
+  }, [eventsData, eventsInitialized]);
 
   // Фильтрация и сортировка данных для All Users Info
   const filteredAndSortedUsers = useMemo(() => {
@@ -3734,12 +3900,58 @@ const Dashboard: React.FC = () => {
 
   // Удалены захардкоженные карточки майнинга
 
+  // Единый объект eventNames для синхронизации цветов между чекбоксами и графиком
+  const eventNamesMap: { [key: string]: { title: string; icon: string; color: string } } = {
+    'mining_started': { title: 'Mining Started', icon: 'mining', color: '#f97316' },
+    'mining_claimed': { title: 'Mining Claimed', icon: 'coins', color: '#10b981' },
+    'equipment_purchase': { title: 'Equipment Purchase', icon: 'cart', color: '#3b82f6' },
+    'checkin_reward': { title: 'Daily Check-in', icon: 'calendar', color: '#ec4899' },
+    'referral_bonus_referrer': { title: 'Referral Bonus', icon: 'dollar', color: '#22c55e' },
+    'swap_btc_to_ecos': { title: 'Swap BTC to XP', icon: 'swap', color: '#0ea5e9' },
+    'daily_all_done_reward': { title: 'All Tasks Done', icon: 'target', color: '#8b5cf6' },
+    'check_tma_reward': { title: 'TMA Check', icon: 'check', color: '#14b8a6' },
+    'follow_game_channel_reward': { title: 'Channel Follow', icon: 'megaphone', color: '#f43f5e' },
+    'app_ecos_register_tma_reward': { title: 'TMA Registration', icon: 'phone', color: '#06b6d4' },
+    'confirm_telegram_premium_reward': { title: 'Telegram Premium', icon: 'star', color: '#f59e0b' },
+    'swap_btc_0_03_to_ecos_reward': { title: 'Swap 0.03 BTC', icon: 'exchange', color: '#0891b2' },
+    'buy_100_asics_in_the_game_reward': { title: 'Own 100 ASIC', icon: 'monitor', color: '#6366f1' },
+    'buy_200_asics_in_the_game_reward': { title: 'Own 200 ASIC', icon: 'laptop', color: '#7c3aed' },
+    'buy_400_asics_in_the_game_reward': { title: 'Own 400 ASIC', icon: 'monitor', color: '#a855f7' },
+    'buy_800_asics_in_the_game_reward': { title: 'Own 800 ASIC', icon: 'monitor', color: '#c084fc' },
+    'buy_1000_asics_in_the_game_reward': { title: 'Own 1000 ASIC', icon: 'monitor', color: '#9333ea' },
+    'buy_property_reward': { title: 'Buy Property', icon: 'building', color: '#059669' },
+    'checkin_7_days_reward': { title: '7 Days Check-in', icon: 'calendar', color: '#16a34a' },
+    'checkin_15_days_reward': { title: '15 Days Check-in', icon: 'calendar-days', color: '#15803d' },
+    'balance_turnover_1000000_reward': { title: 'Balance 1M+', icon: 'diamond', color: '#c026d3' },
+    'combo_reward': { title: 'Combo Complete', icon: 'gamepad', color: '#eab308' },
+    'complete_70_tasks_reward': { title: '70 Tasks Done', icon: 'medal', color: '#ea580c' },
+    'complete_80_tasks_reward': { title: '80 Tasks Done', icon: 'medal', color: '#fb923c' },
+    'complete_90_tasks_reward': { title: '90 Tasks Done', icon: 'trophy', color: '#dc2626' },
+    'like_game_post_reward': { title: 'Like Game Post', icon: 'thumb', color: '#2563eb' },
+    'share_game_post_reward': { title: 'Share Game Post', icon: 'share', color: '#0284c7' },
+    'comment_game_post_reward': { title: 'Comment Game Post', icon: 'message', color: '#7c2d12' },
+    'view_game_post_reward': { title: 'View Game Post', icon: 'eye', color: '#0d9488' },
+    'referral_bonus_referred': { title: 'Referred User', icon: 'user-plus', color: '#65a30d' },
+    'wallet_created': { title: 'Wallet Created', icon: 'wallet', color: '#047857' },
+    'first_transaction': { title: 'First Transaction', icon: 'credit-card', color: '#1e40af' },
+    'level_up': { title: 'Level Up', icon: 'award', color: '#d97706' },
+  };
+
+  // Цвета для событий без определенного цвета
+  const defaultColors = [
+    '#f97316', '#22c55e', '#3b82f6', '#ec4899', '#8b5cf6',
+    '#0ea5e9', '#14b8a6', '#f59e0b', '#ef4444', '#6366f1',
+    '#84cc16', '#06b6d4', '#d946ef', '#f43f5e', '#10b981',
+    '#eab308', '#a855f7', '#0891b2', '#be123c', '#7c3aed',
+    '#fbbf24', '#34d399', '#60a5fa', '#a78bfa', '#fb7185'
+  ];
+
   return (
     <div className="max-w-md mx-auto px-4 py-6 md:max-w-4xl">
       <div className="mb-6 text-center">
         <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Дашборд ECOSMiningGame</h1>
         {stats && (
-          <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Обновлено: {new Date(stats.updatedAtIso).toLocaleString('ru-RU')}</p>
+        <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Обновлено: {new Date(stats.updatedAtIso).toLocaleString('ru-RU')}</p>
         )}
       </div>
 
@@ -3761,8 +3973,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
           )}
           <span>{walletsLoading ? 'Loading...' : 'Wallet Stats'}</span>
         </button>
@@ -3772,8 +3984,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
           )}
           <span>{eventsLoading ? 'Loading...' : 'Game Events'}</span>
         </button>
@@ -3783,8 +3995,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
           )}
           <span>{referralsLoading ? 'Loading...' : 'Referral Stats'}</span>
         </button>
@@ -3794,8 +4006,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
           )}
           <span>{poolsLoading ? 'Loading...' : 'Top Pools'}</span>
         </button>
@@ -3805,8 +4017,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
           )}
           <span>{funnelLoading ? 'Loading...' : 'Users by Level'}</span>
         </button>
@@ -3816,8 +4028,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
           )}
           <span>{leadersLoading ? 'Loading...' : 'Leaderboard'}</span>
         </button>
@@ -3827,8 +4039,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
           )}
           <span>{kpiLoading ? 'Loading...' : 'Users KPI'}</span>
         </button>
@@ -3838,8 +4050,8 @@ const Dashboard: React.FC = () => {
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
           )}
           <span>{allUsersLoading ? 'Loading...' : 'All Users Info'}</span>
         </button>
@@ -3850,8 +4062,8 @@ const Dashboard: React.FC = () => {
       {usersData && (
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Users className="w-6 h-6 text-orange-600" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Статистика пользователей</h2>
+            <Users className="w-6 h-6 text-orange-500" />
+            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>User Statistics</h2>
           </div>
           
           {/* Если пришло текстовое сообщение от n8n */}
@@ -3990,19 +4202,19 @@ const Dashboard: React.FC = () => {
                     
                     {/* Filter buttons */}
                     <div className="flex gap-2">
-                      {[
+                        {[
                         { key: 'all', label: '1D' },
                         { key: '7', label: '1W' },
                         { key: '30', label: '1M' }
-                      ].map(({ key, label }) => (
-                        <button
-                          key={key}
-                          onClick={() => setTimeFilter(key as any)}
+                        ].map(({ key, label }) => (
+                          <button
+                            key={key}
+                            onClick={() => setTimeFilter(key as any)}
                           className={timeFilter === key ? 'neu-btn-filter-active' : 'neu-btn-filter'}
-                        >
-                          {label}
-                        </button>
-                      ))}
+                          >
+                            {label}
+                          </button>
+                        ))}
                     </div>
                   </div>
 
@@ -4111,11 +4323,13 @@ const Dashboard: React.FC = () => {
               {/* Статистика по языкам */}
               {usersData.languageCounts && usersData.languageCounts.length > 0 && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Список языков */}
-                  <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                  {/* Language list */}
+                  <div className="neu-card p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">🌍</span>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Языки пользователей</h3>
+                      <div className="neu-inset p-2">
+                        <Globe className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>User Languages</h3>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       {usersData.languageCounts.slice(0, 8).map((lang: { language: string; count: number }, index: number) => (
@@ -4129,11 +4343,13 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Круговая диаграмма */}
-                  <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                  {/* Pie chart */}
+                  <div className="neu-card p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">🥧</span>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Распределение языков</h3>
+                      <div className="neu-inset p-2">
+                        <TrendingUp className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Language Distribution</h3>
                     </div>
                     <div className="h-64 flex items-center justify-center">
                       <Doughnut
@@ -4192,12 +4408,14 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* Языки за последние 24 часа */}
+              {/* Languages in last 24 hours */}
               {usersData.languageCountsLast24h && usersData.languageCountsLast24h.length > 0 && (
-                <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                <div className="neu-card p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <span className="text-2xl">🌍</span>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Языки за 24 часа</h3>
+                    <div className="neu-inset p-2">
+                      <Globe className="w-5 h-5 text-green-400" />
+                    </div>
+                    <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Languages (24h)</h3>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
                     {usersData.languageCountsLast24h.map((lang: { language: string; count: number }, index: number) => (
@@ -4214,12 +4432,14 @@ const Dashboard: React.FC = () => {
 
               {/* Регистрации по дням и прогноз */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Регистрации по дням */}
+                {/* Registrations by day */}
                 {usersData?.dailyCounts && usersData.dailyCounts.length > 0 && (
-                  <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                  <div className="neu-card p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">📅</span>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Регистрации по дням</h3>
+                      <div className="neu-inset p-2">
+                        <Calendar className="w-5 h-5 text-pink-400" />
+                      </div>
+                      <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Daily Registrations</h3>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       <div className="space-y-2">
@@ -4244,11 +4464,13 @@ const Dashboard: React.FC = () => {
 
                 {/* Прогноз */}
                 {forecast && (
-                  <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                  <div className="neu-card p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-2xl">🔮</span>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Прогноз на {timeFilter === '7' ? '3 недели' : timeFilter === '30' ? '3 месяца' : '7 дней'}
+                      <div className="neu-inset p-2">
+                        <TrendingUp className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Forecast: {timeFilter === '7' ? '3 Weeks' : timeFilter === '30' ? '3 Months' : '7 Days'}
                       </h3>
                     </div>
                     <div className="space-y-3">
@@ -4661,10 +4883,10 @@ const Dashboard: React.FC = () => {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">⚡ Статистика игровых событий</h2>
+            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+              <h2 className="text-2xl font-bold text-white">Game Events Statistics</h2>
             </div>
             {/* Time filter buttons */}
             <div className="flex gap-2">
@@ -4685,12 +4907,14 @@ const Dashboard: React.FC = () => {
           </div>
           
           <div className="space-y-6">
-            {/* График общей активности */}
+            {/* Overall Activity Chart */}
             {filteredEventsData.totalByDay && filteredEventsData.totalByDay.length > 0 && (
-              <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+              <div className="neu-card p-6">
                 <div className="flex items-center gap-3 mb-6">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📈 Общая активность игроков</h3>
+                  <div className="neu-inset p-2">
+                    <TrendingUp className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Overall Player Activity</h3>
                 </div>
                 
                 <div className="h-80">
@@ -4779,15 +5003,201 @@ const Dashboard: React.FC = () => {
               </div>
             )}
             
+            {/* All Events Correlation Chart */}
+            {filteredCorrelationData && filteredCorrelationData.dates.length > 0 && (
+              <div className="neu-card p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="neu-inset p-2">
+                      <TrendingUp className="w-6 h-6 text-cyan-400" />
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>All Events Correlation</h3>
+                      <p className="text-sm text-gray-400">Select events to compare on one chart</p>
+                    </div>
+                  </div>
+
+                  {/* Time Filter Buttons and Clear All */}
+                  <div className="flex gap-2 items-center">
+                    {[
+                      { key: 'all', label: '1D' },
+                      { key: '7', label: '1W' },
+                      { key: '30', label: '1M' }
+                    ].map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setCorrelationTimeFilter(key as 'all' | '7' | '30')}
+                        className={correlationTimeFilter === key ? 'neu-btn-filter-active' : 'neu-btn-filter'}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setSelectedEvents(new Set())}
+                      className="neu-btn-filter"
+                      title="Clear all selections"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                          </div>
+                          
+                {/* Event Checkboxes */}
+                {(() => {
+                  // Исключаем ненужные события
+                  const excludedEvents = ['starter_pack_granted', 'person_created', 'pool_member_bonus', 'pool_owner_commission'];
+                  
+                  const availableEvents = Object.keys(filteredCorrelationData.events)
+                    .filter(eventName => !excludedEvents.includes(eventName))
+                    .slice(0, 20);
+                  
+                  // Создаем мапу для быстрого доступа к индексу события
+                  const eventIndexMap = new Map(availableEvents.map((eventName, index) => [eventName, index]));
+                  
+                  return (
+                    <div className="mb-6 p-4 neu-inset rounded-lg">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-48 overflow-y-auto">
+                        {availableEvents.map((eventName) => {
+                          let eventInfo = eventNamesMap[eventName];
+                          if (!eventInfo) {
+                            // Используем индекс события в availableEvents для определения цвета
+                            const eventIndex = eventIndexMap.get(eventName) || 0;
+                            const color = defaultColors[eventIndex % defaultColors.length];
+                            eventInfo = { title: eventName.replace(/_/g, ' '), icon: 'zap', color };
+                          }
+                          const isSelected = selectedEvents.has(eventName);
+                          
+                          return (
+                            <label
+                              key={eventName}
+                              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  const newSelected = new Set(selectedEvents);
+                                  if (e.target.checked) {
+                                    newSelected.add(eventName);
+                                  } else {
+                                    newSelected.delete(eventName);
+                                  }
+                                  setSelectedEvents(newSelected);
+                                }}
+                                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500 focus:ring-2"
+                                style={{ accentColor: eventInfo.color }}
+                              />
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: eventInfo.color }} />
+                                <span className={`text-xs truncate ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{eventInfo.title}</span>
+                        </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+                
+                <div className="h-96">
+                  <Line
+                    data={{
+                      labels: filteredCorrelationData.dates,
+                      datasets: selectedEvents.size > 0 ? (() => {
+                        // Исключаем ненужные события
+                        const excludedEvents = ['starter_pack_granted', 'person_created', 'pool_member_bonus', 'pool_owner_commission'];
+                        
+                        // Получаем доступные события в том же порядке, что и в чекбоксах
+                        const availableEvents = Object.keys(filteredCorrelationData.events)
+                          .filter(eventName => !excludedEvents.includes(eventName))
+                          .slice(0, 20);
+                        
+                        // Создаем мапу для быстрого доступа к индексу события
+                        const eventIndexMap = new Map(availableEvents.map((eventName, index) => [eventName, index]));
+                        
+                        return Array.from(selectedEvents)
+                          .filter(eventName => !excludedEvents.includes(eventName))
+                          .map((eventName) => {
+                            const eventData = filteredCorrelationData.events[eventName] || [];
+                            
+                            // Используем единый объект eventNamesMap для синхронизации цветов
+                            let eventInfo = eventNamesMap[eventName];
+                            if (!eventInfo) {
+                              // Используем индекс события в availableEvents для определения цвета (как в чекбоксах)
+                              const eventIndex = eventIndexMap.get(eventName) || 0;
+                              const color = defaultColors[eventIndex % defaultColors.length];
+                              eventInfo = { title: eventName.replace(/_/g, ' '), icon: 'zap', color };
+                            }
+                            
+                            // Создаем массив данных, соответствующий всем датам
+                            const dataMap = new Map(eventData.map(d => [d.date, d.count]));
+                            const data = filteredCorrelationData.dates.map(date => dataMap.get(date) || 0);
+                            
+                            return {
+                              label: eventInfo.title,
+                              data,
+                              borderColor: eventInfo.color,
+                              backgroundColor: 'transparent',
+                              borderWidth: 2,
+                              fill: false,
+                              tension: 0.3,
+                              pointRadius: 2,
+                              pointHoverRadius: 5,
+                            };
+                          });
+                        })() : []
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                              color: '#9ca3af',
+                              font: { size: 10 },
+                              boxWidth: 12,
+                              padding: 8,
+                              usePointStyle: true,
+                            }
+                          },
+                          tooltip: {
+                            backgroundColor: '#1f2937',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#374151',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            mode: 'index',
+                            intersect: false,
+                          }
+                        },
+                        scales: {
+                          x: {
+                            grid: { color: '#374151', drawBorder: false },
+                            ticks: { color: '#9ca3af', font: { size: 10 }, maxRotation: 45, minRotation: 45 }
+                          },
+                          y: {
+                            beginAtZero: true,
+                            grid: { color: '#374151', drawBorder: false },
+                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                          }
+                        },
+                        interaction: { intersect: false, mode: 'index' }
+                      }}
+                    />
+                </div>
+              </div>
+            )}
+            
             {/* Category Navigation */}
             {filteredEventsData.events && Object.keys(filteredEventsData.events).length > 0 && (
               <div className="neu-card p-6">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-6">
                   <div className="neu-inset p-3">
-                    <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <Search className="w-6 h-6 text-orange-500" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">Quick Navigation</h3>
@@ -4798,27 +5208,27 @@ const Dashboard: React.FC = () => {
                 {/* Categories Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {[
-                    { name: '⛏️ Mining Events', icon: '⛏️' },
-                    { name: '🛒 Purchases', icon: '🛒' },
-                    { name: '📅 Daily Activities', icon: '📅' },
-                    { name: '👥 Referrals', icon: '👥' },
-                    { name: '🔄 Transactions', icon: '🔄' },
-                    { name: '🎯 Tasks', icon: '🎯' },
-                    { name: '📱 Social', icon: '📱' },
-                    { name: '✅ Registrations', icon: '✅' },
-                    { name: '🖥️ ASIC Tasks', icon: '🖥️' },
-                    { name: '🏢 Property Tasks', icon: '🏢' },
-                    { name: '🏆 Achievements', icon: '🏆' },
+                    { name: 'Mining Events', icon: 'mining', color: '#f97316' },
+                    { name: 'Purchases', icon: 'cart', color: '#3b82f6' },
+                    { name: 'Daily Activities', icon: 'calendar', color: '#ec4899' },
+                    { name: 'Referrals', icon: 'users', color: '#22c55e' },
+                    { name: 'Transactions', icon: 'swap', color: '#0ea5e9' },
+                    { name: 'Tasks', icon: 'target', color: '#8b5cf6' },
+                    { name: 'Social', icon: 'phone', color: '#06b6d4' },
+                    { name: 'Registrations', icon: 'check', color: '#14b8a6' },
+                    { name: 'ASIC Tasks', icon: 'monitor', color: '#3b82f6' },
+                    { name: 'Property Tasks', icon: 'building', color: '#10b981' },
+                    { name: 'Achievements', icon: 'trophy', color: '#f59e0b' },
                   ].map((category) => (
                     <button
                       key={category.name}
                       onClick={() => scrollToCategory(category.name)}
                       className="neu-btn text-left"
                     >
-                      <span className="text-xl">{category.icon}</span>
-                      <span className="flex-1 text-xs text-gray-300">{category.name.replace(/^[^\s]+\s/, '')}</span>
-                    </button>
-                  ))}
+                      <EventIcon name={category.icon} className="w-4 h-4" color={category.color} />
+                      <span className="flex-1 text-xs text-gray-300">{category.name}</span>
+                      </button>
+                    ))}
                 </div>
               </div>
             )}
@@ -4827,114 +5237,63 @@ const Dashboard: React.FC = () => {
             {filteredEventsData.events && Object.keys(filteredEventsData.events).length > 0 && (
               <div className="space-y-8">
                 {(() => {
-                  // Названия событий на русском
+                  // Event names with icon keys
                   const eventNames: { [key: string]: { title: string; icon: string; color: string } } = {
-                    'mining_started': { title: 'Майнинг запущен', icon: '⛏️', color: '#f97316' },
-                    'mining_claimed': { title: 'Майнинг собран', icon: '💰', color: '#10b981' },
-                    'equipment_purchase': { title: 'Покупка оборудования', icon: '🛒', color: '#3b82f6' },
-                    'checkin_reward': { title: 'Ежедневный вход', icon: '📅', color: '#ec4899' },
-                    'referral_bonus_referrer': { title: 'Выплаты бонусов за рефералов', icon: '💸', color: '#22c55e' },
-                    'swap_btc_to_ecos': { title: 'Обмен xpBTC на XP', icon: '🔄', color: '#0ea5e9' },
-                    'daily_all_done_reward': { title: 'Все задания выполнены', icon: '🎯', color: '#8b5cf6' },
-                    'check_tma_reward': { title: 'Проверка TMA', icon: '✅', color: '#14b8a6' },
-                    'follow_game_channel_reward': { title: 'Подписка на канал игры', icon: '📢', color: '#3b82f6' },
-                    'app_ecos_register_tma_reward': { title: 'Регистрация в TMA', icon: '📱', color: '#06b6d4' },
-                    'confirm_telegram_premium_reward': { title: 'Подтверждение Telegram Premium', icon: '⭐', color: '#f59e0b' },
-                    'swap_btc_0_03_to_ecos_reward': { title: 'Обмен 0.03 BTC на XP', icon: '💱', color: '#0ea5e9' },
-                    'buy_100_asics_in_the_game_reward': { title: 'Выполнение задания на владение 100 ASIC в игре', icon: '🖥️', color: '#3b82f6' },
-                    'buy_200_asics_in_the_game_reward': { title: 'Выполнение задания на владение 200 ASIC в игре', icon: '💻', color: '#06b6d4' },
-                    'buy_400_asics_in_the_game_reward': { title: 'Выполнение задания на владение 400 ASIC в игре', icon: '🖥️', color: '#8b5cf6' },
-                    'buy_600_asics_in_the_game_reward': { title: 'Выполнение задания на владение 600 ASIC в игре', icon: '💻', color: '#8b5cf6' },
-                    'buy_asics_in_the_game_reward': { title: 'Покупка ASIC единоразовое задание', icon: '⚡', color: '#f59e0b' },
-                    'buy_datacenter_in_the_game_reward': { title: 'Покупка Datacenter в игре', icon: '🏢', color: '#10b981' },
-                    'buy_energy_station_in_the_game_reward': { title: 'Покупка ES в игре', icon: '⚡', color: '#eab308' },
-                    'buy_land_in_the_game_reward': { title: 'Покупка земли', icon: '🏞️', color: '#10b981' },
-                    'check_telegram_wallet_reward': { title: 'Подключение Кошелька TON к игре', icon: '💳', color: '#0ea5e9' },
-                    'checkin_7_days_reward': { title: 'Совершить Check in 7 дней подряд', icon: '📅', color: '#22c55e' },
-                    'checkin_15_days_reward': { title: 'Совершить Check in 15 дней подряд', icon: '📆', color: '#16a34a' },
-                    'balance_turnover_1000000_reward': { title: 'Количество пользователей с совокупным балансом от 1000000', icon: '💎', color: '#a855f7' },
-                    'combo_reward': { title: 'COMBO заданий выполнено', icon: '🎮', color: '#f59e0b' },
-                    'complete_70_tasks_reward': { title: 'Выполнено 70 заданий', icon: '🥈', color: '#f97316' },
-                    'complete_80_tasks_reward': { title: 'Выполнено 80 заданий', icon: '🥉', color: '#fb923c' },
-                    'complete_90_tasks_reward': { title: 'Выполнено 90 заданий', icon: '🏆', color: '#f97316' },
-                    'like_game_post_reward': { title: 'Лайк поста в игровом канале', icon: '👍', color: '#3b82f6' },
-                    'like_telegram_post_reward': { title: 'Лайк поста в Telegram', icon: '💙', color: '#0ea5e9' },
-                    'poke_reward': { title: 'Награда за poke', icon: '👉', color: '#ec4899' },
-                    'referral_claim_reward': { title: 'Получение бонуса за реферала', icon: '🎉', color: '#22c55e' },
-                    'site_visit_reward': { title: 'Посещение сайта', icon: '🌐', color: '#8b5cf6' },
-                    'telegram_channel_follow_reward': { title: 'Подписка на канал Telegram', icon: '📱', color: '#06b6d4' },
-                    'swap_btc_0_05_to_ecos_reward': { title: 'Обмен 0.05 BTC на XP', icon: '💰', color: '#0ea5e9' },
-                    'reach_100000_ths_reward': { title: 'Достижение 100000 TH/s', icon: '⚡', color: '#f59e0b' },
-                    'plan_completed_reward': { title: 'План выполнен', icon: '✅', color: '#22c55e' },
-                    'bonus_reward': { title: 'Бонусная награда', icon: '🎁', color: '#ec4899' },
-                    'referral_bonus_referee': { title: 'Бонус рефери', icon: '👥', color: '#14b8a6' },
+                    'mining_started': { title: 'Mining Started', icon: 'mining', color: '#f97316' },
+                    'mining_claimed': { title: 'Mining Claimed', icon: 'coins', color: '#10b981' },
+                    'equipment_purchase': { title: 'Equipment Purchase', icon: 'cart', color: '#3b82f6' },
+                    'checkin_reward': { title: 'Daily Check-in', icon: 'calendar', color: '#ec4899' },
+                    'referral_bonus_referrer': { title: 'Referral Bonus', icon: 'dollar', color: '#22c55e' },
+                    'swap_btc_to_ecos': { title: 'Swap BTC to XP', icon: 'swap', color: '#0ea5e9' },
+                    'daily_all_done_reward': { title: 'All Tasks Done', icon: 'target', color: '#8b5cf6' },
+                    'check_tma_reward': { title: 'TMA Check', icon: 'check', color: '#14b8a6' },
+                    'follow_game_channel_reward': { title: 'Channel Follow', icon: 'megaphone', color: '#3b82f6' },
+                    'app_ecos_register_tma_reward': { title: 'TMA Registration', icon: 'phone', color: '#06b6d4' },
+                    'confirm_telegram_premium_reward': { title: 'Telegram Premium', icon: 'star', color: '#f59e0b' },
+                    'swap_btc_0_03_to_ecos_reward': { title: 'Swap 0.03 BTC', icon: 'exchange', color: '#0ea5e9' },
+                    'buy_100_asics_in_the_game_reward': { title: 'Own 100 ASIC', icon: 'monitor', color: '#3b82f6' },
+                    'buy_200_asics_in_the_game_reward': { title: 'Own 200 ASIC', icon: 'laptop', color: '#06b6d4' },
+                    'buy_400_asics_in_the_game_reward': { title: 'Own 400 ASIC', icon: 'monitor', color: '#8b5cf6' },
+                    'buy_600_asics_in_the_game_reward': { title: 'Own 600 ASIC', icon: 'laptop', color: '#8b5cf6' },
+                    'buy_asics_in_the_game_reward': { title: 'Buy ASIC Task', icon: 'zap', color: '#f59e0b' },
+                    'buy_datacenter_in_the_game_reward': { title: 'Buy Datacenter', icon: 'building', color: '#10b981' },
+                    'buy_energy_station_in_the_game_reward': { title: 'Buy Energy Station', icon: 'zap', color: '#eab308' },
+                    'buy_land_in_the_game_reward': { title: 'Buy Land', icon: 'mountain', color: '#10b981' },
+                    'check_telegram_wallet_reward': { title: 'Connect TON Wallet', icon: 'wallet', color: '#0ea5e9' },
+                    'checkin_7_days_reward': { title: '7 Days Check-in', icon: 'calendar', color: '#22c55e' },
+                    'checkin_15_days_reward': { title: '15 Days Check-in', icon: 'calendar-days', color: '#16a34a' },
+                    'balance_turnover_1000000_reward': { title: 'Balance 1M+', icon: 'diamond', color: '#a855f7' },
+                    'combo_reward': { title: 'Combo Complete', icon: 'gamepad', color: '#f59e0b' },
+                    'complete_70_tasks_reward': { title: '70 Tasks Done', icon: 'medal', color: '#f97316' },
+                    'complete_80_tasks_reward': { title: '80 Tasks Done', icon: 'medal', color: '#fb923c' },
+                    'complete_90_tasks_reward': { title: '90 Tasks Done', icon: 'trophy', color: '#f97316' },
+                    'like_game_post_reward': { title: 'Like Game Post', icon: 'thumb', color: '#3b82f6' },
+                    'like_telegram_post_reward': { title: 'Like Telegram Post', icon: 'heart', color: '#0ea5e9' },
+                    'poke_reward': { title: 'Poke Reward', icon: 'pointer', color: '#ec4899' },
+                    'referral_claim_reward': { title: 'Referral Claim', icon: 'party', color: '#22c55e' },
+                    'site_visit_reward': { title: 'Site Visit', icon: 'globe', color: '#8b5cf6' },
+                    'telegram_channel_follow_reward': { title: 'Telegram Follow', icon: 'phone', color: '#06b6d4' },
+                    'swap_btc_0_05_to_ecos_reward': { title: 'Swap 0.05 BTC', icon: 'coins', color: '#0ea5e9' },
+                    'reach_100000_ths_reward': { title: 'Reach 100K TH/s', icon: 'zap', color: '#f59e0b' },
+                    'plan_completed_reward': { title: 'Plan Complete', icon: 'check', color: '#22c55e' },
+                    'bonus_reward': { title: 'Bonus Reward', icon: 'gift', color: '#ec4899' },
+                    'referral_bonus_referee': { title: 'Referee Bonus', icon: 'users', color: '#14b8a6' },
                   };
                   
-                  // Категории событий
-                  const eventCategories = {
-                    '⛏️ Игровые события майнинга': [
-                      'mining_started',
-                      'mining_claimed',
-                    ],
-                    '🛒 Покупки и оборудование': [
-                      'equipment_purchase',
-                    ],
-                    '📅 Ежедневные активности': [
-                      'checkin_reward',
-                      'checkin_7_days_reward',
-                      'checkin_15_days_reward',
-                      'combo_reward',
-                      'poke_reward',
-                    ],
-                    '👥 Реферальная система': [
-                      'referral_bonus_referrer',
-                      'referral_claim_reward',
-                      'referral_bonus_referee',
-                    ],
-                    '🔄 Обмены и транзакции': [
-                      'swap_btc_to_ecos',
-                      'swap_btc_0_03_to_ecos_reward',
-                      'swap_btc_0_05_to_ecos_reward',
-                    ],
-                    '🎯 Задания на выполнение': [
-                      'daily_all_done_reward',
-                      'complete_70_tasks_reward',
-                      'complete_80_tasks_reward',
-                      'complete_90_tasks_reward',
-                      'plan_completed_reward',
-                    ],
-                    '📱 Социальные активности': [
-                      'follow_game_channel_reward',
-                      'telegram_channel_follow_reward',
-                      'like_game_post_reward',
-                      'like_telegram_post_reward',
-                      'site_visit_reward',
-                    ],
-                    '✅ Подключения и регистрации': [
-                      'app_ecos_register_tma_reward',
-                      'confirm_telegram_premium_reward',
-                      'check_telegram_wallet_reward',
-                      'check_tma_reward',
-                    ],
-                    '🖥️ Задания на покупку ASIC': [
-                      'buy_asics_in_the_game_reward',
-                      'buy_100_asics_in_the_game_reward',
-                      'buy_200_asics_in_the_game_reward',
-                      'buy_400_asics_in_the_game_reward',
-                      'buy_600_asics_in_the_game_reward',
-                    ],
-                    '🏢 Задания на покупку объектов владения': [
-                      'buy_datacenter_in_the_game_reward',
-                      'buy_energy_station_in_the_game_reward',
-                      'buy_land_in_the_game_reward',
-                    ],
-                    '🏆 Достижения': [
-                      'reach_100000_ths_reward',
-                      'balance_turnover_1000000_reward',
-                    ],
-                    '🎁 Бонусы и награды': [
-                      'bonus_reward',
-                    ],
+                  // Event categories with icon keys
+                  const eventCategories: { [key: string]: { icon: string; events: string[] } } = {
+                    'Mining Events': { icon: 'mining', events: ['mining_started', 'mining_claimed'] },
+                    'Purchases': { icon: 'cart', events: ['equipment_purchase'] },
+                    'Daily Activities': { icon: 'calendar', events: ['checkin_reward', 'checkin_7_days_reward', 'checkin_15_days_reward', 'combo_reward', 'poke_reward'] },
+                    'Referrals': { icon: 'users', events: ['referral_bonus_referrer', 'referral_claim_reward', 'referral_bonus_referee'] },
+                    'Transactions': { icon: 'swap', events: ['swap_btc_to_ecos', 'swap_btc_0_03_to_ecos_reward', 'swap_btc_0_05_to_ecos_reward'] },
+                    'Tasks': { icon: 'target', events: ['daily_all_done_reward', 'complete_70_tasks_reward', 'complete_80_tasks_reward', 'complete_90_tasks_reward', 'plan_completed_reward'] },
+                    'Social': { icon: 'phone', events: ['follow_game_channel_reward', 'telegram_channel_follow_reward', 'like_game_post_reward', 'like_telegram_post_reward', 'site_visit_reward'] },
+                    'Registrations': { icon: 'check', events: ['app_ecos_register_tma_reward', 'confirm_telegram_premium_reward', 'check_telegram_wallet_reward', 'check_tma_reward'] },
+                    'ASIC Tasks': { icon: 'monitor', events: ['buy_asics_in_the_game_reward', 'buy_100_asics_in_the_game_reward', 'buy_200_asics_in_the_game_reward', 'buy_400_asics_in_the_game_reward', 'buy_600_asics_in_the_game_reward'] },
+                    'Property Tasks': { icon: 'building', events: ['buy_datacenter_in_the_game_reward', 'buy_energy_station_in_the_game_reward', 'buy_land_in_the_game_reward'] },
+                    'Achievements': { icon: 'trophy', events: ['reach_100000_ths_reward', 'balance_turnover_1000000_reward'] },
+                    'Bonuses': { icon: 'gift', events: ['bonus_reward'] },
                   };
                   
                   // События, которые не нужно отображать
@@ -4944,14 +5303,16 @@ const Dashboard: React.FC = () => {
                   const renderEventCard = (eventName: string, eventData: any) => {
                     const totalCount = eventData.reduce((sum: number, day: any) => sum + day.count, 0);
                     const lastDayCount = eventData.length > 0 ? eventData[eventData.length - 1].count : 0;
-                  const eventInfo = eventNames[eventName] || { title: eventName, icon: '⚡', color: '#6b7280' };
+                  const eventInfo = eventNames[eventName] || { title: eventName, icon: 'zap', color: '#6b7280' };
                   
                   return (
-                    <div key={eventName} className={`p-6 rounded-xl shadow-lg min-h-[280px] flex flex-col ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                    <div key={eventName} className="neu-card p-6 min-h-[280px] flex flex-col">
                       <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{eventInfo.icon}</span>
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{eventInfo.title}</h4>
+                        <div className="flex items-center gap-3">
+                          <div className="neu-inset p-2">
+                            <EventIcon name={eventInfo.icon} className="w-5 h-5" color={eventInfo.color} />
+                          </div>
+                          <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'} leading-tight`}>{eventInfo.title}</h4>
                         </div>
                       </div>
                       
@@ -5025,18 +5386,18 @@ const Dashboard: React.FC = () => {
                   );
                   };
                   
-                  // Рендерим категории с событиями
+                  // Render categories with events
                   return (
                     <>
-                      {Object.entries(eventCategories).map(([categoryName, eventsList]) => {
-                        // Фильтруем события: берем только те, что есть в данных и не исключены
-                        const categoryEvents = eventsList
+                      {Object.entries(eventCategories).map(([categoryName, categoryData]) => {
+                        // Filter events: only those that exist in data and not excluded
+                        const categoryEvents = categoryData.events
                           .filter(eventName => 
                             filteredEventsData.events[eventName] && 
                             !excludedEvents.includes(eventName)
                           );
                         
-                        // Если в категории нет событий - не показываем её
+                        // If no events in category - don't show it
                         if (categoryEvents.length === 0) return null;
                         
                         return (
@@ -5045,26 +5406,29 @@ const Dashboard: React.FC = () => {
                             className="space-y-4"
                             ref={(el) => (categoryRefs.current[categoryName] = el)}
                           >
-                            {/* Заголовок категории */}
-                            <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} border-b-2 ${isDark ? 'border-gray-700' : 'border-gray-200'} pb-2`}>
-                              {categoryName}
-                            </h3>
+                            {/* Category header */}
+                            <div className="flex items-center gap-3 border-b border-gray-700 pb-3">
+                              <EventIcon name={categoryData.icon} className="w-6 h-6 text-orange-500" />
+                              <h3 className="text-xl font-bold text-white">{categoryName}</h3>
+                            </div>
                             
-                            {/* Карточки событий в категории */}
+                            {/* Event cards in category */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                               {categoryEvents.map(eventName => 
                                 renderEventCard(eventName, filteredEventsData.events[eventName])
                               )}
                               
-                              {/* Специальный блок сравнения для майнинг-событий */}
-                              {categoryName === '⛏️ Игровые события майнинга' && 
+                              {/* Special comparison block for mining events */}
+                              {categoryName === 'Mining Events' && 
                                filteredEventsData.events['mining_started'] && 
                                filteredEventsData.events['mining_claimed'] && (
-                                <div className={`p-6 rounded-xl shadow-lg min-h-[280px] flex flex-col ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                                <div className="neu-card p-6 min-h-[280px] flex flex-col">
                                   <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-2xl">📊</span>
-                                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">Соотношение: Запуск → Сбор</h4>
+                                    <div className="flex items-center gap-3">
+                                      <div className="neu-inset p-2">
+                                        <TrendingUp className="w-5 h-5 text-purple-400" />
+                                      </div>
+                                      <h4 className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'} leading-tight`}>Ratio: Start → Claim</h4>
                                     </div>
                                   </div>
                                   
@@ -5218,12 +5582,14 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* График приглашений по дням */}
+            {/* Invitations chart by day */}
             {referralsData.byDay && referralsData.byDay.length > 0 && (
-              <div className={`p-6 rounded-xl shadow-lg ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">📈</span>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Динамика приглашений по дням</h3>
+              <div className="neu-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="neu-inset p-2">
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Daily Invitations</h3>
                 </div>
                 <div className="h-80">
                   <Line
@@ -5408,9 +5774,11 @@ const Dashboard: React.FC = () => {
             {/* Заголовок модального окна */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">📊</span>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Обзор активности: {activityOverview.referrer_name}
+                <div className="neu-inset p-2">
+                  <TrendingUp className="w-6 h-6 text-orange-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-white">
+                  Activity Overview: {activityOverview.referrer_name}
                 </h3>
               </div>
               <button
@@ -5672,7 +6040,7 @@ const Dashboard: React.FC = () => {
             <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">📊 Users по уровням</h2>
+            <h2 className="text-2xl font-bold text-white">Users by Level</h2>
           </div>
 
           <div className="space-y-6">
@@ -9150,9 +9518,9 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
-        );
+        )
       })()}
-
+      
       {/* Модальное окно сравнительного графика майнинга */}
       {comparisonModalOpen && eventsData && eventsData.events['mining_started'] && eventsData.events['mining_claimed'] && (
         <div 

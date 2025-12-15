@@ -11,22 +11,40 @@
     @apply antialiased transition-colors duration-300;
   }
   
+  html.dark,
   .dark {
     background: #1a1a1a !important;
   }
   
+  html:not(.dark) {
+    background: #f5f5f5 !important;
+  }
+  
+  html.dark body,
+  .dark body {
+    background: #1a1a1a !important;
+  }
+  
+  html:not(.dark) body {
+    background: #f5f5f5 !important;
+  }
+  
   /* Custom scrollbar - Dark */
+  html.dark ::-webkit-scrollbar,
   .dark ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
+  html.dark ::-webkit-scrollbar-track,
   .dark ::-webkit-scrollbar-track {
     background-color: #1a1a1a;
   }
+  html.dark ::-webkit-scrollbar-thumb,
   .dark ::-webkit-scrollbar-thumb {
     background-color: #404040;
     border-radius: 9999px;
   }
+  html.dark ::-webkit-scrollbar-thumb:hover,
   .dark ::-webkit-scrollbar-thumb:hover {
     background-color: #525252;
   }
@@ -34,69 +52,168 @@
 
 @layer components {
   /* ===========================================
-     NEUMORPHIC CARDS
+     NEUMORPHIC CARDS - BASE STYLES (apply always)
      =========================================== */
   
   .neu-card {
-    background: #212121;
     border-radius: 20px;
-    box-shadow: 8px 8px 16px rgb(25, 25, 25),
-                -8px -8px 16px rgb(60, 60, 60);
   }
   
   .neu-card-sm {
-    background: #212121;
     border-radius: 15px;
-    box-shadow: 5px 5px 10px rgb(25, 25, 25),
-                -5px -5px 10px rgb(60, 60, 60);
   }
   
   .neu-card-lg {
-    background: #212121;
     border-radius: 30px;
-    box-shadow: 15px 15px 30px rgb(25, 25, 25),
-                -15px -15px 30px rgb(60, 60, 60);
   }
   
   .neu-inset {
-    background: #212121;
     border-radius: 15px;
-    box-shadow: inset 5px 5px 10px rgb(25, 25, 25),
-                inset -5px -5px 10px rgb(60, 60, 60);
   }
 
   .neu-input {
-    background: #212121;
     border-radius: 12px;
-    box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
-                inset -3px -3px 6px rgb(60, 60, 60);
     border: none;
-    color: #ffffff;
     padding: 12px 16px;
   }
   
   .neu-input:focus {
     outline: none;
-    box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
-                inset -3px -3px 6px rgb(60, 60, 60),
-                0 0 0 2px rgba(249, 115, 22, 0.5);
   }
   
   .neu-nav {
-    background: #212121;
-    box-shadow: 0 -8px 16px rgb(25, 25, 25);
   }
   
   .neu-nav-item-active {
-    background: #212121;
-    box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
-                inset -3px -3px 6px rgb(60, 60, 60);
-    color: #f97316;
   }
   
   .neu-header {
-    background: #212121;
-    box-shadow: 0 8px 16px rgb(25, 25, 25);
+  }
+
+  /* ===========================================
+     NEUMORPHIC CARDS - DARK THEME COLORS
+     =========================================== */
+  
+  .dark .neu-card,
+  html.dark .neu-card {
+    background: #212121 !important;
+    box-shadow: 8px 8px 16px rgb(25, 25, 25),
+                -8px -8px 16px rgb(60, 60, 60) !important;
+  }
+  
+  .dark .neu-card-sm,
+  html.dark .neu-card-sm {
+    background: #212121 !important;
+    box-shadow: 5px 5px 10px rgb(25, 25, 25),
+                -5px -5px 10px rgb(60, 60, 60) !important;
+  }
+  
+  .dark .neu-card-lg,
+  html.dark .neu-card-lg {
+    background: #212121 !important;
+    box-shadow: 15px 15px 30px rgb(25, 25, 25),
+                -15px -15px 30px rgb(60, 60, 60) !important;
+  }
+  
+  .dark .neu-inset,
+  html.dark .neu-inset {
+    background: #212121 !important;
+    box-shadow: inset 5px 5px 10px rgb(25, 25, 25),
+                inset -5px -5px 10px rgb(60, 60, 60) !important;
+  }
+
+  .dark .neu-input,
+  html.dark .neu-input {
+    background: #212121 !important;
+    box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
+                inset -3px -3px 6px rgb(60, 60, 60) !important;
+    color: #ffffff !important;
+  }
+  
+  .dark .neu-input:focus,
+  html.dark .neu-input:focus {
+    box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
+                inset -3px -3px 6px rgb(60, 60, 60),
+                0 0 0 2px rgba(249, 115, 22, 0.5) !important;
+  }
+  
+  .dark .neu-nav,
+  html.dark .neu-nav {
+    background: #212121 !important;
+    box-shadow: 0 -8px 16px rgb(25, 25, 25) !important;
+  }
+  
+  .dark .neu-nav-item-active,
+  html.dark .neu-nav-item-active {
+    background: #212121 !important;
+    box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
+                inset -3px -3px 6px rgb(60, 60, 60) !important;
+    color: #f97316 !important;
+  }
+  
+  .dark .neu-header,
+  html.dark .neu-header {
+    background: #212121 !important;
+    box-shadow: 0 8px 16px rgb(25, 25, 25) !important;
+  }
+
+  /* ===========================================
+     NEUMORPHIC CARDS - LIGHT THEME
+     Меняем только цвета и тени, остальное остается как в темной теме
+     =========================================== */
+  
+  html:not(.dark) .neu-card {
+    background: #f5f5f5 !important;
+    box-shadow: 8px 8px 16px rgb(200, 200, 200),
+                -8px -8px 16px rgb(255, 255, 255) !important;
+  }
+  
+  html:not(.dark) .neu-card-sm {
+    background: #f5f5f5 !important;
+    box-shadow: 5px 5px 10px rgb(200, 200, 200),
+                -5px -5px 10px rgb(255, 255, 255) !important;
+  }
+  
+  html:not(.dark) .neu-card-lg {
+    background: #f5f5f5 !important;
+    box-shadow: 15px 15px 30px rgb(200, 200, 200),
+                -15px -15px 30px rgb(255, 255, 255) !important;
+  }
+  
+  html:not(.dark) .neu-inset {
+    background: #f5f5f5 !important;
+    box-shadow: inset 5px 5px 10px rgb(200, 200, 200),
+                inset -5px -5px 10px rgb(255, 255, 255) !important;
+  }
+
+  html:not(.dark) .neu-input {
+    background: #f5f5f5 !important;
+    box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+                inset -3px -3px 6px rgb(255, 255, 255) !important;
+    color: #1a1a1a !important;
+  }
+  
+  html:not(.dark) .neu-input:focus {
+    box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+                inset -3px -3px 6px rgb(255, 255, 255),
+                0 0 0 2px rgba(249, 115, 22, 0.5) !important;
+  }
+  
+  html:not(.dark) .neu-nav {
+    background: #f5f5f5 !important;
+    box-shadow: 0 -8px 16px rgb(200, 200, 200) !important;
+  }
+  
+  html:not(.dark) .neu-nav-item-active {
+    background: #f5f5f5 !important;
+    box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+                inset -3px -3px 6px rgb(255, 255, 255) !important;
+    color: #f97316 !important;
+  }
+  
+  html:not(.dark) .neu-header {
+    background: #f5f5f5 !important;
+    box-shadow: 0 8px 16px rgb(200, 200, 200) !important;
   }
   
   .neu-status {
@@ -117,16 +234,12 @@
   }
 
   /* ===========================================
-     NEUMORPHIC BUTTONS - Same style as cards
+     NEUMORPHIC BUTTONS - BASE STYLES (apply always)
      =========================================== */
   
   .neu-btn {
-    background: #212121;
     border-radius: 15px;
-    box-shadow: 5px 5px 10px rgb(25, 25, 25),
-                -5px -5px 10px rgb(60, 60, 60);
     border: none;
-    color: #ffffff;
     padding: 0.625rem 1rem;
     font-size: 0.75rem;
     font-weight: 500;
@@ -139,24 +252,34 @@
     white-space: nowrap;
   }
 
-  .neu-btn:hover {
+  /* ===========================================
+     NEUMORPHIC BUTTONS - DARK THEME COLORS
+     =========================================== */
+  
+  .dark .neu-btn,
+  html.dark .neu-btn {
+    background: #212121 !important;
+    box-shadow: 5px 5px 10px rgb(25, 25, 25),
+                -5px -5px 10px rgb(60, 60, 60) !important;
+    color: #ffffff !important;
+  }
+
+  .dark .neu-btn:hover,
+  html.dark .neu-btn:hover {
     box-shadow: 3px 3px 6px rgb(25, 25, 25),
-                -3px -3px 6px rgb(60, 60, 60);
+                -3px -3px 6px rgb(60, 60, 60) !important;
   }
 
-  .neu-btn:active {
+  .dark .neu-btn:active,
+  html.dark .neu-btn:active {
     box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
-                inset -3px -3px 6px rgb(60, 60, 60);
+                inset -3px -3px 6px rgb(60, 60, 60) !important;
   }
 
-  /* Filter buttons - fixed width */
+  /* Filter buttons - fixed width - BASE STYLES */
   .neu-btn-filter {
-    background: #212121;
     border-radius: 12px;
-    box-shadow: 4px 4px 8px rgb(25, 25, 25),
-                -4px -4px 8px rgb(60, 60, 60);
     border: none;
-    color: #a3a3a3;
     padding: 0.5rem 0;
     font-size: 0.75rem;
     font-weight: 500;
@@ -169,19 +292,30 @@
     min-width: 70px;
   }
 
-  .neu-btn-filter:hover {
-    box-shadow: 2px 2px 4px rgb(25, 25, 25),
-                -2px -2px 4px rgb(60, 60, 60);
-    color: #ffffff;
+  /* Filter buttons - DARK THEME COLORS */
+  .dark .neu-btn-filter,
+  html.dark .neu-btn-filter {
+    background: #212121 !important;
+    box-shadow: 4px 4px 8px rgb(25, 25, 25),
+                -4px -4px 8px rgb(60, 60, 60) !important;
+    color: #a3a3a3 !important;
   }
 
-  .neu-btn-filter-active {
-    background: #212121;
+  .dark .neu-btn-filter:hover,
+  html.dark .neu-btn-filter:hover {
+    box-shadow: 2px 2px 4px rgb(25, 25, 25),
+                -2px -2px 4px rgb(60, 60, 60) !important;
+    color: #ffffff !important;
+  }
+
+  .dark .neu-btn-filter-active,
+  html.dark .neu-btn-filter-active {
+    background: #212121 !important;
     border-radius: 12px;
     box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
-                inset -3px -3px 6px rgb(60, 60, 60);
+                inset -3px -3px 6px rgb(60, 60, 60) !important;
     border: none;
-    color: #f97316;
+    color: #f97316 !important;
     padding: 0.5rem 0;
     font-size: 0.75rem;
     font-weight: 600;
@@ -194,12 +328,9 @@
     min-width: 70px;
   }
 
+  /* Button active - BASE STYLES */
   .neu-btn-active {
-    background: #212121;
     border-radius: 15px;
-    box-shadow: inset 4px 4px 8px rgb(25, 25, 25),
-                inset -4px -4px 8px rgb(60, 60, 60);
-    color: #f97316;
     padding: 0.625rem 1rem;
     font-size: 0.75rem;
     font-weight: 500;
@@ -213,14 +344,19 @@
     white-space: nowrap;
   }
 
-  /* Large button variant - for main action buttons */
+  /* Button active - DARK THEME COLORS */
+  .dark .neu-btn-active,
+  html.dark .neu-btn-active {
+    background: #212121 !important;
+    box-shadow: inset 4px 4px 8px rgb(25, 25, 25),
+                inset -4px -4px 8px rgb(60, 60, 60) !important;
+    color: #f97316 !important;
+  }
+
+  /* Large button variant - BASE STYLES */
   .neu-btn-lg {
-    background: #212121;
     border-radius: 15px;
-    box-shadow: 6px 6px 12px rgb(25, 25, 25),
-                -6px -6px 12px rgb(60, 60, 60);
     border: none;
-    color: #ffffff;
     padding: 0.75rem 1rem;
     font-size: 0.75rem;
     font-weight: 500;
@@ -233,14 +369,91 @@
     white-space: nowrap;
   }
 
-  .neu-btn-lg:hover {
-    box-shadow: 4px 4px 8px rgb(25, 25, 25),
-                -4px -4px 8px rgb(60, 60, 60);
+  /* Large button variant - DARK THEME COLORS */
+  .dark .neu-btn-lg,
+  html.dark .neu-btn-lg {
+    background: #212121 !important;
+    box-shadow: 6px 6px 12px rgb(25, 25, 25),
+                -6px -6px 12px rgb(60, 60, 60) !important;
+    color: #ffffff !important;
   }
 
-  .neu-btn-lg:active {
+  .dark .neu-btn-lg:hover,
+  html.dark .neu-btn-lg:hover {
+    box-shadow: 4px 4px 8px rgb(25, 25, 25),
+                -4px -4px 8px rgb(60, 60, 60) !important;
+  }
+
+  .dark .neu-btn-lg:active,
+  html.dark .neu-btn-lg:active {
     box-shadow: inset 3px 3px 6px rgb(25, 25, 25),
-                inset -3px -3px 6px rgb(60, 60, 60);
+                inset -3px -3px 6px rgb(60, 60, 60) !important;
+  }
+
+  /* ===========================================
+     NEUMORPHIC BUTTONS - LIGHT THEME
+     Меняем только цвета и тени, остальное остается как в темной теме
+     =========================================== */
+
+  html:not(.dark) .neu-btn {
+    background: #f5f5f5 !important;
+    box-shadow: 5px 5px 10px rgb(200, 200, 200),
+                -5px -5px 10px rgb(255, 255, 255) !important;
+    color: #1a1a1a !important;
+  }
+
+  html:not(.dark) .neu-btn:hover {
+    box-shadow: 3px 3px 6px rgb(200, 200, 200),
+                -3px -3px 6px rgb(255, 255, 255) !important;
+  }
+
+  html:not(.dark) .neu-btn:active {
+    box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+                inset -3px -3px 6px rgb(255, 255, 255) !important;
+  }
+
+  html:not(.dark) .neu-btn-filter {
+    background: #f5f5f5 !important;
+    box-shadow: 4px 4px 8px rgb(200, 200, 200),
+                -4px -4px 8px rgb(255, 255, 255) !important;
+    color: #525252 !important;
+  }
+
+  html:not(.dark) .neu-btn-filter:hover {
+    box-shadow: 2px 2px 4px rgb(200, 200, 200),
+                -2px -2px 4px rgb(255, 255, 255) !important;
+    color: #1a1a1a !important;
+  }
+
+  html:not(.dark) .neu-btn-filter-active {
+    background: #f5f5f5 !important;
+    box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+                inset -3px -3px 6px rgb(255, 255, 255) !important;
+    color: #f97316 !important;
+  }
+
+  html:not(.dark) .neu-btn-active {
+    background: #f5f5f5 !important;
+    box-shadow: inset 4px 4px 8px rgb(200, 200, 200),
+                inset -4px -4px 8px rgb(255, 255, 255) !important;
+    color: #f97316 !important;
+  }
+
+  html:not(.dark) .neu-btn-lg {
+    background: #f5f5f5 !important;
+    box-shadow: 6px 6px 12px rgb(200, 200, 200),
+                -6px -6px 12px rgb(255, 255, 255) !important;
+    color: #1a1a1a !important;
+  }
+
+  html:not(.dark) .neu-btn-lg:hover {
+    box-shadow: 4px 4px 8px rgb(200, 200, 200),
+                -4px -4px 8px rgb(255, 255, 255) !important;
+  }
+
+  html:not(.dark) .neu-btn-lg:active {
+    box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+                inset -3px -3px 6px rgb(255, 255, 255) !important;
   }
 
   .neu-btn-lg:disabled {
@@ -276,8 +489,11 @@
    =========================================== */
 
 /* Neumorphic card style for dark mode containers */
+html.dark [class*="bg-white"],
 .dark [class*="bg-white"],
+html.dark [class*="bg-gray-800"],
 .dark [class*="bg-gray-800"],
+html.dark [class*="bg-gray-700"],
 .dark [class*="bg-gray-700"] {
   background: #212121 !important;
   border-radius: 20px !important;
@@ -286,21 +502,30 @@
   border: none !important;
 }
 
-/* Text colors */
+/* Text colors - Dark theme */
+html.dark [class*="text-gray-900"],
 .dark [class*="text-gray-900"],
-.dark [class*="text-gray-800"] {
+html.dark [class*="text-gray-800"],
+.dark [class*="text-gray-800"],
+html.dark [class*="text-white"],
+.dark [class*="text-white"] {
   color: #ffffff !important;
 }
 
+html.dark [class*="text-gray-700"],
 .dark [class*="text-gray-700"] {
   color: #e5e5e5 !important;
 }
 
+html.dark [class*="text-gray-600"],
 .dark [class*="text-gray-600"] {
   color: #a3a3a3 !important;
 }
 
-.dark [class*="text-gray-500"] {
+html.dark [class*="text-gray-500"],
+.dark [class*="text-gray-500"],
+html.dark [class*="text-gray-400"],
+.dark [class*="text-gray-400"] {
   color: #737373 !important;
 }
 
@@ -309,7 +534,7 @@
   border-color: transparent !important;
 }
 
-/* Inputs neumorphic style */
+/* Inputs neumorphic style - Dark theme */
 .dark input,
 .dark textarea,
 .dark select {
@@ -351,6 +576,75 @@
 
 .dark [class*="rounded-2xl"] {
   border-radius: 24px !important;
+}
+
+/* ===========================================
+   LIGHT MODE STYLE OVERRIDES
+   =========================================== */
+
+/* Text colors - Light theme */
+html:not(.dark) [class*="text-white"],
+html:not(.dark) [class*="text-gray-900"],
+html:not(.dark) [class*="text-gray-800"] {
+  color: #1a1a1a !important;
+}
+
+html:not(.dark) [class*="text-gray-700"] {
+  color: #404040 !important;
+}
+
+html:not(.dark) [class*="text-gray-600"] {
+  color: #525252 !important;
+}
+
+html:not(.dark) [class*="text-gray-500"],
+html:not(.dark) [class*="text-gray-400"] {
+  color: #737373 !important;
+}
+
+/* Inputs neumorphic style - Light theme */
+/* Меняем только цвета и тени */
+html:not(.dark) input,
+html:not(.dark) textarea,
+html:not(.dark) select {
+  background: #f5f5f5 !important;
+  box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+              inset -3px -3px 6px rgb(255, 255, 255) !important;
+  color: #1a1a1a !important;
+}
+
+html:not(.dark) input:focus,
+html:not(.dark) textarea:focus,
+html:not(.dark) select:focus {
+  box-shadow: inset 3px 3px 6px rgb(200, 200, 200),
+              inset -3px -3px 6px rgb(255, 255, 255),
+              0 0 0 2px rgba(249, 115, 22, 0.5) !important;
+}
+
+/* Background colors - Light theme */
+html:not(.dark) [class*="bg-gray-800"],
+html:not(.dark) [class*="bg-gray-700"],
+html:not(.dark) [class*="bg-gray-900"] {
+  background: #f5f5f5 !important;
+}
+
+/* Scrollbar - Light theme */
+html:not(.dark) ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-track {
+  background-color: #f5f5f5;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background-color: #d4d4d4;
+  border-radius: 9999px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background-color: #a3a3a3;
 }
 
 /* ===========================================

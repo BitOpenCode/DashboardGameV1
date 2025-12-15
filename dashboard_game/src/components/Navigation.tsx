@@ -9,7 +9,7 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ activeScreen, onScreenChange }) => {
   const { isDark } = useTheme();
-  
+
   const navItems = [
     { id: 'home', label: isDark ? 'HOME' : 'Главная', icon: Home },
     { id: 'dashboard', label: isDark ? 'DASHBOARD' : 'Дашборд', icon: BarChart3 },

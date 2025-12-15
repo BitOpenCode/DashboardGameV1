@@ -49,7 +49,7 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem('ecos_active_screen', activeScreen);
-  }, [activeScreen]);
+    }, [activeScreen]);
 
   useEffect(() => {
     const isModalOpen = activeScreen === 'email-confirmation' || activeScreen === 'password-reset';
@@ -185,8 +185,8 @@ function App() {
               </div>
               <div>
                 <h1 className={`text-xl font-bold tracking-wider ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  ECOS
-                </h1>
+                ECOS
+              </h1>
                 <p className={`text-xs font-mono ${isDark ? 'text-neutral-500' : 'text-gray-500'}`}>
                   {isDark ? 'TACTICAL DASHBOARD' : 'Mining Game'}
                 </p>
@@ -194,7 +194,7 @@ function App() {
             </div>
             <div className="flex items-center space-x-4">
               {isDark && (
-                <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
                   <div className="neu-status neu-status-active"></div>
                   <span className="text-xs text-neutral-400 font-mono">ONLINE</span>
                 </div>
