@@ -174,6 +174,10 @@ const Dashboard: React.FC = () => {
   } | null>(null);
   const [tonOrdersTimeFilter, setTonOrdersTimeFilter] = useState<'all' | '7' | '30'>('all');
   const [tonOrdersChartType, setTonOrdersChartType] = useState<'line' | 'bar'>('line');
+  const [eventsChartType, setEventsChartType] = useState<'line' | 'bar'>('line');
+  const [modalChartType, setModalChartType] = useState<'line' | 'bar'>('line');
+  const [comparisonChartType, setComparisonChartType] = useState<'line' | 'bar'>('line');
+  const [correlationChartType, setCorrelationChartType] = useState<'line' | 'bar'>('line');
   const [eventsData, setEventsData] = useState<{
     events: {
       [key: string]: { date: string; count: number }[];
@@ -4436,7 +4440,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="max-w-md mx-auto px-4 py-6 md:max-w-4xl">
       <div className="mb-6 text-center">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Дашборд ECOSMiningGame</h1>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">ECOS BTC Mining Game</h1>
         {stats && (
         <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Обновлено: {new Date(stats.updatedAtIso).toLocaleString('ru-RU')}</p>
         )}
@@ -5397,20 +5401,40 @@ const Dashboard: React.FC = () => {
             {/* Overall Activity Chart */}
             {filteredEventsData.totalByDay && filteredEventsData.totalByDay.length > 0 && (
               <div className="neu-card p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="neu-inset p-2">
-                    <TrendingUp className="w-6 h-6 text-purple-400" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="neu-inset p-2">
+                      <TrendingUp className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white">Overall Player Activity</h3>
                   </div>
-                  <h3 className="text-lg font-semibold text-white">Overall Player Activity</h3>
+                  
+                  {/* Chart Type Toggle */}
+                  <button
+                    onClick={() => setEventsChartType(eventsChartType === 'line' ? 'bar' : 'line')}
+                    className="neu-btn-filter"
+                    title={eventsChartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+                  >
+                    {eventsChartType === 'line' ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
                 
                 <div className="h-80">
+                  {eventsChartType === 'line' ? (
                   <Line
                     data={{
-                      labels: filteredEventsData.totalByDay.map(day => day.date),
+                        labels: filteredEventsData.totalByDay.map(day => day.date),
                       datasets: [{
-                        label: eventsTimeFilter === 'all' ? 'Всего событий за день' : eventsTimeFilter === '7' ? 'Всего событий за неделю' : 'Всего событий за месяц',
-                        data: filteredEventsData.totalByDay.map(day => day.count),
+                          label: eventsTimeFilter === 'all' ? 'Всего событий за день' : eventsTimeFilter === '7' ? 'Всего событий за неделю' : 'Всего событий за месяц',
+                          data: filteredEventsData.totalByDay.map(day => day.count),
                         borderColor: isDark ? '#a855f7' : '#9333ea',
                         backgroundColor: isDark ? 'rgba(168, 85, 247, 0.1)' : 'rgba(147, 51, 234, 0.05)',
                         borderWidth: 3,
@@ -5486,6 +5510,82 @@ const Dashboard: React.FC = () => {
                       }
                     }}
                   />
+                  ) : (
+                    <Bar
+                      data={{
+                        labels: filteredEventsData.totalByDay.map(day => day.date),
+                        datasets: [{
+                          label: eventsTimeFilter === 'all' ? 'Всего событий за день' : eventsTimeFilter === '7' ? 'Всего событий за неделю' : 'Всего событий за месяц',
+                          data: filteredEventsData.totalByDay.map(day => day.count),
+                          backgroundColor: isDark ? '#a855f7' : '#9333ea',
+                          borderColor: isDark ? '#a855f7' : '#9333ea',
+                          borderWidth: 1,
+                        }]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: {
+                            display: false
+                          },
+                          tooltip: {
+                            backgroundColor: isDark ? '#374151' : '#ffffff',
+                            titleColor: isDark ? '#ffffff' : '#000000',
+                            bodyColor: isDark ? '#ffffff' : '#000000',
+                            borderColor: isDark ? '#4b5563' : '#e5e7eb',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                              title: function(context) {
+                                return `📅 ${context[0].label}`;
+                              },
+                              label: function(context) {
+                                return `⚡ ${context.parsed.y} событий`;
+                              }
+                            }
+                          }
+                        },
+                        scales: {
+                          x: {
+                            grid: {
+                              color: isDark ? '#374151' : '#f3f4f6',
+                              drawBorder: false
+                            },
+                            ticks: {
+                              color: isDark ? '#9ca3af' : '#6b7280',
+                              font: {
+                                size: 11
+                              },
+                              maxRotation: 45,
+                              minRotation: 45
+                            }
+                          },
+                          y: {
+                            beginAtZero: true,
+                            grid: {
+                              color: isDark ? '#374151' : '#f3f4f6',
+                              drawBorder: false
+                            },
+                            ticks: {
+                              color: isDark ? '#9ca3af' : '#6b7280',
+                              font: {
+                                size: 12
+                              },
+                              callback: function(value) {
+                                return Number(value).toLocaleString('ru-RU');
+                              }
+                            }
+                          }
+                        },
+                        interaction: {
+                          intersect: false,
+                          mode: 'index'
+                        }
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             )}
@@ -6137,7 +6237,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Time Filter Buttons and Clear All */}
+                  {/* Time Filter Buttons, Chart Type Toggle and Clear All */}
                   <div className="flex gap-2 items-center">
                     {[
                       { key: 'all', label: '1D' },
@@ -6152,6 +6252,22 @@ const Dashboard: React.FC = () => {
                         {label}
                       </button>
                     ))}
+                    <div className="h-6 w-px bg-gray-600 mx-1" />
+                    <button
+                      onClick={() => setCorrelationChartType(correlationChartType === 'line' ? 'bar' : 'line')}
+                      className="neu-btn-filter"
+                      title={correlationChartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+                    >
+                      {correlationChartType === 'line' ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                        </svg>
+                      )}
+                    </button>
                     <button
                       onClick={() => setSelectedEvents(new Set())}
                       className="neu-btn-filter"
@@ -6160,7 +6276,7 @@ const Dashboard: React.FC = () => {
                       <X className="w-4 h-4" />
                     </button>
                   </div>
-                          </div>
+                </div>
                           
                 {/* Event Checkboxes */}
                 {(() => {
@@ -6220,93 +6336,181 @@ const Dashboard: React.FC = () => {
                 })()}
                 
                 <div className="h-96">
-                  <Line
-                    data={{
-                      labels: filteredCorrelationData.dates,
-                      datasets: selectedEvents.size > 0 ? (() => {
-                        // Исключаем ненужные события
-                        const excludedEvents = ['starter_pack_granted', 'person_created', 'pool_member_bonus', 'pool_owner_commission'];
-                        
-                        // Получаем доступные события в том же порядке, что и в чекбоксах
-                        const availableEvents = Object.keys(filteredCorrelationData.events)
-                          .filter(eventName => !excludedEvents.includes(eventName))
-                          .slice(0, 20);
-                        
-                        // Создаем мапу для быстрого доступа к индексу события
-                        const eventIndexMap = new Map(availableEvents.map((eventName, index) => [eventName, index]));
-                        
-                        return Array.from(selectedEvents)
-                          .filter(eventName => !excludedEvents.includes(eventName))
-                          .map((eventName) => {
-                            const eventData = filteredCorrelationData.events[eventName] || [];
-                            
-                            // Используем единый объект eventNamesMap для синхронизации цветов
-                            let eventInfo = eventNamesMap[eventName];
-                            if (!eventInfo) {
-                              // Используем индекс события в availableEvents для определения цвета (как в чекбоксах)
-                              const eventIndex = eventIndexMap.get(eventName) || 0;
-                              const color = defaultColors[eventIndex % defaultColors.length];
-                              eventInfo = { title: eventName.replace(/_/g, ' '), icon: 'zap', color };
-                            }
-                            
-                            // Создаем массив данных, соответствующий всем датам
-                            const dataMap = new Map(eventData.map(d => [d.date, d.count]));
-                            const data = filteredCorrelationData.dates.map(date => dataMap.get(date) || 0);
-                            
-                            return {
-                              label: eventInfo.title,
-                              data,
-                              borderColor: eventInfo.color,
-                              backgroundColor: 'transparent',
-                              borderWidth: 2,
-                              fill: false,
-                              tension: 0.3,
-                              pointRadius: 2,
-                              pointHoverRadius: 5,
-                            };
-                          });
-                        })() : []
-                      }}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                          legend: {
-                            display: true,
-                            position: 'bottom',
-                            labels: {
-                              color: '#9ca3af',
-                              font: { size: 10 },
-                              boxWidth: 12,
-                              padding: 8,
-                              usePointStyle: true,
+                  {correlationChartType === 'line' ? (
+                    <Line
+                      data={{
+                        labels: filteredCorrelationData.dates,
+                        datasets: selectedEvents.size > 0 ? (() => {
+                          // Исключаем ненужные события
+                          const excludedEvents = ['starter_pack_granted', 'person_created', 'pool_member_bonus', 'pool_owner_commission'];
+                          
+                          // Получаем доступные события в том же порядке, что и в чекбоксах
+                          const availableEvents = Object.keys(filteredCorrelationData.events)
+                            .filter(eventName => !excludedEvents.includes(eventName))
+                            .slice(0, 20);
+                          
+                          // Создаем мапу для быстрого доступа к индексу события
+                          const eventIndexMap = new Map(availableEvents.map((eventName, index) => [eventName, index]));
+                          
+                          return Array.from(selectedEvents)
+                            .filter(eventName => !excludedEvents.includes(eventName))
+                            .map((eventName) => {
+                              const eventData = filteredCorrelationData.events[eventName] || [];
+                              
+                              // Используем единый объект eventNamesMap для синхронизации цветов
+                              let eventInfo = eventNamesMap[eventName];
+                              if (!eventInfo) {
+                                // Используем индекс события в availableEvents для определения цвета (как в чекбоксах)
+                                const eventIndex = eventIndexMap.get(eventName) || 0;
+                                const color = defaultColors[eventIndex % defaultColors.length];
+                                eventInfo = { title: eventName.replace(/_/g, ' '), icon: 'zap', color };
+                              }
+                              
+                              // Создаем массив данных, соответствующий всем датам
+                              const dataMap = new Map(eventData.map(d => [d.date, d.count]));
+                              const data = filteredCorrelationData.dates.map(date => dataMap.get(date) || 0);
+                              
+                              return {
+                                label: eventInfo.title,
+                                data,
+                                borderColor: eventInfo.color,
+                                backgroundColor: 'transparent',
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.3,
+                                pointRadius: 2,
+                                pointHoverRadius: 5,
+                              };
+                            });
+                          })() : []
+                        }}
+                        options={{
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                            legend: {
+                              display: true,
+                              position: 'bottom',
+                              labels: {
+                                color: '#9ca3af',
+                                font: { size: 10 },
+                                boxWidth: 12,
+                                padding: 8,
+                                usePointStyle: true,
+                              }
+                            },
+                            tooltip: {
+                              backgroundColor: '#1f2937',
+                              titleColor: '#ffffff',
+                              bodyColor: '#ffffff',
+                              borderColor: '#374151',
+                              borderWidth: 1,
+                              cornerRadius: 8,
+                              mode: 'index',
+                              intersect: false,
                             }
                           },
-                          tooltip: {
-                            backgroundColor: '#1f2937',
-                            titleColor: '#ffffff',
-                            bodyColor: '#ffffff',
-                            borderColor: '#374151',
-                            borderWidth: 1,
-                            cornerRadius: 8,
-                            mode: 'index',
-                            intersect: false,
-                          }
-                        },
-                        scales: {
-                          x: {
-                            grid: { color: '#374151', drawBorder: false },
-                            ticks: { color: '#9ca3af', font: { size: 10 }, maxRotation: 45, minRotation: 45 }
+                          scales: {
+                            x: {
+                              grid: { color: '#374151', drawBorder: false },
+                              ticks: { color: '#9ca3af', font: { size: 10 }, maxRotation: 45, minRotation: 45 }
+                            },
+                            y: {
+                              beginAtZero: true,
+                              grid: { color: '#374151', drawBorder: false },
+                              ticks: { color: '#9ca3af', font: { size: 11 } }
+                            }
                           },
-                          y: {
-                            beginAtZero: true,
-                            grid: { color: '#374151', drawBorder: false },
-                            ticks: { color: '#9ca3af', font: { size: 11 } }
-                          }
-                        },
-                        interaction: { intersect: false, mode: 'index' }
-                      }}
-                    />
+                          interaction: { intersect: false, mode: 'index' }
+                        }}
+                      />
+                    ) : (
+                      <Bar
+                        data={{
+                          labels: filteredCorrelationData.dates,
+                          datasets: selectedEvents.size > 0 ? (() => {
+                            // Исключаем ненужные события
+                            const excludedEvents = ['starter_pack_granted', 'person_created', 'pool_member_bonus', 'pool_owner_commission'];
+                            
+                            // Получаем доступные события в том же порядке, что и в чекбоксах
+                            const availableEvents = Object.keys(filteredCorrelationData.events)
+                              .filter(eventName => !excludedEvents.includes(eventName))
+                              .slice(0, 20);
+                            
+                            // Создаем мапу для быстрого доступа к индексу события
+                            const eventIndexMap = new Map(availableEvents.map((eventName, index) => [eventName, index]));
+                            
+                            return Array.from(selectedEvents)
+                              .filter(eventName => !excludedEvents.includes(eventName))
+                              .map((eventName) => {
+                                const eventData = filteredCorrelationData.events[eventName] || [];
+                                
+                                // Используем единый объект eventNamesMap для синхронизации цветов
+                                let eventInfo = eventNamesMap[eventName];
+                                if (!eventInfo) {
+                                  // Используем индекс события в availableEvents для определения цвета (как в чекбоксах)
+                                  const eventIndex = eventIndexMap.get(eventName) || 0;
+                                  const color = defaultColors[eventIndex % defaultColors.length];
+                                  eventInfo = { title: eventName.replace(/_/g, ' '), icon: 'zap', color };
+                                }
+                                
+                                // Создаем массив данных, соответствующий всем датам
+                                const dataMap = new Map(eventData.map(d => [d.date, d.count]));
+                                const data = filteredCorrelationData.dates.map(date => dataMap.get(date) || 0);
+                                
+                                return {
+                                  label: eventInfo.title,
+                                  data,
+                                  backgroundColor: eventInfo.color,
+                                  borderColor: eventInfo.color,
+                                  borderWidth: 1,
+                                };
+                              });
+                            })() : []
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: {
+                                  color: '#9ca3af',
+                                  font: { size: 10 },
+                                  boxWidth: 12,
+                                  padding: 8,
+                                  usePointStyle: true,
+                                }
+                              },
+                              tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleColor: '#ffffff',
+                                bodyColor: '#ffffff',
+                                borderColor: '#374151',
+                                borderWidth: 1,
+                                cornerRadius: 8,
+                                mode: 'index',
+                                intersect: false,
+                              }
+                            },
+                            scales: {
+                              x: {
+                                stacked: true,
+                                grid: { color: '#374151', drawBorder: false },
+                                ticks: { color: '#9ca3af', font: { size: 10 }, maxRotation: 45, minRotation: 45 }
+                              },
+                              y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                grid: { color: '#374151', drawBorder: false },
+                                ticks: { color: '#9ca3af', font: { size: 11 } }
+                              }
+                            },
+                            interaction: { intersect: false, mode: 'index' }
+                          }}
+                        />
+                      )}
                 </div>
               </div>
             )}
@@ -7069,12 +7273,13 @@ const Dashboard: React.FC = () => {
             
             {/* Большой график */}
             <div className="h-96">
+              {modalChartType === 'line' ? (
               <Line
                 data={{
-                  labels: filteredModalData.map(d => d.date),
+                    labels: filteredModalData.map(d => d.date),
                   datasets: [{
                     label: selectedEventModal.eventInfo.title,
-                    data: filteredModalData.map(d => d.count),
+                      data: filteredModalData.map(d => d.count),
                     borderColor: selectedEventModal.eventInfo.color,
                     backgroundColor: `${selectedEventModal.eventInfo.color}20`,
                     borderWidth: 3,
@@ -7148,6 +7353,80 @@ const Dashboard: React.FC = () => {
                   }
                 }}
               />
+              ) : (
+                <Bar
+                  data={{
+                    labels: filteredModalData.map(d => d.date),
+                    datasets: [{
+                      label: selectedEventModal.eventInfo.title,
+                      data: filteredModalData.map(d => d.count),
+                      backgroundColor: selectedEventModal.eventInfo.color,
+                      borderColor: selectedEventModal.eventInfo.color,
+                      borderWidth: 1,
+                    }]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: false
+                      },
+                      tooltip: {
+                        backgroundColor: isDark ? '#374151' : '#ffffff',
+                        titleColor: isDark ? '#ffffff' : '#000000',
+                        bodyColor: isDark ? '#ffffff' : '#000000',
+                        borderColor: isDark ? '#4b5563' : '#e5e7eb',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                          title: function(context) {
+                            return `📅 ${context[0].label}`;
+                          },
+                          label: function(context) {
+                            return `⚡ ${context.parsed.y} событий`;
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      x: {
+                        grid: {
+                          color: isDark ? '#374151' : '#f3f4f6',
+                          drawBorder: false
+                        },
+                        ticks: {
+                          color: isDark ? '#9ca3af' : '#6b7280',
+                          font: {
+                            size: 12
+                          }
+                        }
+                      },
+                      y: {
+                        beginAtZero: true,
+                        grid: {
+                          color: isDark ? '#374151' : '#f3f4f6',
+                          drawBorder: false
+                        },
+                        ticks: {
+                          color: isDark ? '#9ca3af' : '#6b7280',
+                          font: {
+                            size: 12
+                          },
+                          callback: function(value) {
+                            return Number(value).toLocaleString('ru-RU');
+                          }
+                        }
+                      }
+                    },
+                    interaction: {
+                      intersect: false,
+                      mode: 'index'
+                    }
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -10605,7 +10884,7 @@ const Dashboard: React.FC = () => {
                 </h3>
               </div>
               <button
-                onClick={() => { setComparisonModalOpen(false); setComparisonTimeFilter('all'); }}
+                onClick={() => { setComparisonModalOpen(false); setComparisonTimeFilter('all'); setComparisonChartType('line'); }}
                 className={`p-2 rounded-lg transition-colors ${
                   isDark 
                     ? 'hover:bg-gray-700 text-gray-300' 
@@ -10619,7 +10898,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Filter buttons */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 items-center mb-6">
               {[
                 { key: 'all', label: '1D' },
                 { key: '7', label: '1W' },
@@ -10633,6 +10912,22 @@ const Dashboard: React.FC = () => {
                   {label}
                 </button>
               ))}
+              <div className="h-6 w-px bg-gray-600 mx-1" />
+              <button
+                onClick={() => setComparisonChartType(comparisonChartType === 'line' ? 'bar' : 'line')}
+                className="neu-btn-filter"
+                title={comparisonChartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+              >
+                {comparisonChartType === 'line' ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  </svg>
+                )}
+              </button>
             </div>
             
             {/* Статистика */}
@@ -10666,110 +10961,205 @@ const Dashboard: React.FC = () => {
             {/* Большой график */}
             {filteredComparisonData && (
             <div className="h-96">
-              <Line
-                data={{
-                    labels: filteredComparisonData.dates,
-                  datasets: [
-                    {
-                      label: 'Майнинг запущен',
-                        data: filteredComparisonData.started.map((d: any) => d.count),
-                      borderColor: '#f97316',
-                      backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                      borderWidth: 3,
-                      fill: true,
-                      tension: 0.4,
-                      pointBackgroundColor: '#f97316',
-                      pointBorderColor: isDark ? '#ffffff' : '#ffffff',
-                      pointBorderWidth: 2,
-                      pointRadius: 6,
-                      pointHoverRadius: 8,
-                    },
-                    {
-                      label: 'Майнинг собран',
-                        data: filteredComparisonData.claimed.map((d: any) => d.count),
-                      borderColor: '#10b981',
-                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                      borderWidth: 3,
-                      fill: true,
-                      tension: 0.4,
-                      pointBackgroundColor: '#10b981',
-                      pointBorderColor: isDark ? '#ffffff' : '#ffffff',
-                      pointBorderWidth: 2,
-                      pointRadius: 6,
-                      pointHoverRadius: 8,
-                    }
-                  ]
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      display: true,
-                      position: 'top',
-                      labels: {
-                        color: isDark ? '#ffffff' : '#000000',
-                        padding: 20,
-                        usePointStyle: true,
-                        font: {
-                          size: 14
-                        }
-                      }
-                    },
-                    tooltip: {
-                      backgroundColor: isDark ? '#374151' : '#ffffff',
-                      titleColor: isDark ? '#ffffff' : '#000000',
-                      bodyColor: isDark ? '#ffffff' : '#000000',
-                      borderColor: isDark ? '#4b5563' : '#e5e7eb',
-                      borderWidth: 1,
-                      cornerRadius: 8,
-                      displayColors: true,
-                      callbacks: {
-                        title: function(context) {
-                          return `📅 ${context[0].label}`;
-                        },
-                        label: function(context) {
-                          return `${context.dataset.label}: ${context.parsed.y} событий`;
-                        }
-                      }
-                    }
-                  },
-                  scales: {
-                    x: {
-                      grid: {
-                        color: isDark ? '#374151' : '#f3f4f6',
-                        drawBorder: false
+              {comparisonChartType === 'line' ? (
+                <Line
+                  data={{
+                      labels: filteredComparisonData.dates,
+                    datasets: [
+                      {
+                        label: 'Майнинг запущен',
+                          data: filteredComparisonData.started.map((d: any) => d.count),
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#f97316',
+                        pointBorderColor: isDark ? '#ffffff' : '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
                       },
-                      ticks: {
-                        color: isDark ? '#9ca3af' : '#6b7280',
-                        font: {
-                          size: 12
+                      {
+                        label: 'Майнинг собран',
+                          data: filteredComparisonData.claimed.map((d: any) => d.count),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: isDark ? '#ffffff' : '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                      }
+                    ]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                          color: isDark ? '#ffffff' : '#000000',
+                          padding: 20,
+                          usePointStyle: true,
+                          font: {
+                            size: 14
+                          }
+                        }
+                      },
+                      tooltip: {
+                        backgroundColor: isDark ? '#374151' : '#ffffff',
+                        titleColor: isDark ? '#ffffff' : '#000000',
+                        bodyColor: isDark ? '#ffffff' : '#000000',
+                        borderColor: isDark ? '#4b5563' : '#e5e7eb',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                          title: function(context) {
+                            return `📅 ${context[0].label}`;
+                          },
+                          label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y} событий`;
+                          }
                         }
                       }
                     },
-                    y: {
-                      beginAtZero: true,
-                      grid: {
-                        color: isDark ? '#374151' : '#f3f4f6',
-                        drawBorder: false
-                      },
-                      ticks: {
-                        color: isDark ? '#9ca3af' : '#6b7280',
-                        font: {
-                          size: 12
+                    scales: {
+                      x: {
+                        grid: {
+                          color: isDark ? '#374151' : '#f3f4f6',
+                          drawBorder: false
                         },
-                        callback: function(value) {
-                          return Number(value).toLocaleString('ru-RU');
+                        ticks: {
+                          color: isDark ? '#9ca3af' : '#6b7280',
+                          font: {
+                            size: 12
+                          }
+                        }
+                      },
+                      y: {
+                        beginAtZero: true,
+                        grid: {
+                          color: isDark ? '#374151' : '#f3f4f6',
+                          drawBorder: false
+                        },
+                        ticks: {
+                          color: isDark ? '#9ca3af' : '#6b7280',
+                          font: {
+                            size: 12
+                          },
+                          callback: function(value) {
+                            return Number(value).toLocaleString('ru-RU');
+                          }
                         }
                       }
+                    },
+                    interaction: {
+                      intersect: false,
+                      mode: 'index'
                     }
-                  },
-                  interaction: {
-                    intersect: false,
-                    mode: 'index'
-                  }
-                }}
-              />
+                  }}
+                />
+              ) : (
+                <Bar
+                  data={{
+                      labels: filteredComparisonData.dates,
+                    datasets: [
+                      {
+                        label: 'Майнинг запущен',
+                          data: filteredComparisonData.started.map((d: any) => d.count),
+                        backgroundColor: '#f97316',
+                        borderColor: '#f97316',
+                        borderWidth: 1,
+                      },
+                      {
+                        label: 'Майнинг собран',
+                          data: filteredComparisonData.claimed.map((d: any) => d.count),
+                        backgroundColor: '#10b981',
+                        borderColor: '#10b981',
+                        borderWidth: 1,
+                      }
+                    ]
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                          color: isDark ? '#ffffff' : '#000000',
+                          padding: 20,
+                          usePointStyle: true,
+                          font: {
+                            size: 14
+                          }
+                        }
+                      },
+                      tooltip: {
+                        backgroundColor: isDark ? '#374151' : '#ffffff',
+                        titleColor: isDark ? '#ffffff' : '#000000',
+                        bodyColor: isDark ? '#ffffff' : '#000000',
+                        borderColor: isDark ? '#4b5563' : '#e5e7eb',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                          title: function(context) {
+                            return `📅 ${context[0].label}`;
+                          },
+                          label: function(context) {
+                            return `${context.dataset.label}: ${context.parsed.y} событий`;
+                          }
+                        }
+                      }
+                    },
+                    scales: {
+                      x: {
+                        stacked: true,
+                        grid: {
+                          color: isDark ? '#374151' : '#f3f4f6',
+                          drawBorder: false
+                        },
+                        ticks: {
+                          color: isDark ? '#9ca3af' : '#6b7280',
+                          font: {
+                            size: 12
+                          }
+                        }
+                      },
+                      y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: {
+                          color: isDark ? '#374151' : '#f3f4f6',
+                          drawBorder: false
+                        },
+                        ticks: {
+                          color: isDark ? '#9ca3af' : '#6b7280',
+                          font: {
+                            size: 12
+                          },
+                          callback: function(value) {
+                            return Number(value).toLocaleString('ru-RU');
+                          }
+                        }
+                      }
+                    },
+                    interaction: {
+                      intersect: false,
+                      mode: 'index'
+                    }
+                  }}
+                />
+              )}
             </div>
             )}
           </div>
