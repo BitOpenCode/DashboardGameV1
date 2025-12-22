@@ -8304,7 +8304,7 @@ const Dashboard: React.FC = () => {
           }}
         >
           <div 
-            className={`max-w-6xl w-full rounded-xl shadow-2xl p-6 mb-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}
+            className="max-w-6xl w-full rounded-xl shadow-2xl p-6 mb-8 neu-card-lg"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Заголовок модального окна */}
@@ -8312,11 +8312,11 @@ const Dashboard: React.FC = () => {
               <div className="flex items-center gap-3">
                 <span className="text-3xl">👤</span>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <h3 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Детали пользователя
                   </h3>
                   {userDetails.user && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {userDetails.user.username || userDetails.user.first_name || `ID: ${userDetails.user.person_id}`}
                     </p>
                   )}
@@ -8637,10 +8637,10 @@ const Dashboard: React.FC = () => {
 
                 {/* Заказы */}
                 {userTransactions && (
-                  <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                  <div className="p-4 rounded-lg neu-card">
+                    <h4 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       Заказы
-                      {userTransactions.loading && <span className="ml-2 text-sm text-gray-500">(загрузка...)</span>}
+                      {userTransactions.loading && <span className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>(загрузка...)</span>}
                     </h4>
                     {userTransactions.loading ? (
                       <div className="text-center py-4">
@@ -8664,8 +8664,8 @@ const Dashboard: React.FC = () => {
                         </div>
                         {/* Фильтры заказов */}
                         {userTransactions.orders && userTransactions.orders.length > 0 && (
-                          <div className={`mt-4 p-3 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-white border border-gray-200'}`}>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Фильтры заказов:</p>
+                          <div className="mt-4 p-3 rounded-lg neu-card">
+                            <p className={`text-xs mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Фильтры заказов:</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                               {/* Фильтр по типу */}
                               <div>
@@ -8759,11 +8759,7 @@ const Dashboard: React.FC = () => {
                                     tonMin: '',
                                     tonMax: ''
                                   })}
-                                  className={`w-full px-3 py-1 text-sm rounded ${
-                                    isDark 
-                                      ? 'bg-gray-600 hover:bg-gray-500 text-gray-200' 
-                                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                                  } transition-colors`}
+                                  className="w-full neu-btn-filter"
                                 >
                                   Сбросить
                                 </button>
@@ -9037,10 +9033,10 @@ const Dashboard: React.FC = () => {
 
                 {/* Все транзакции */}
                 {userTransactions && (
-                  <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-                    <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+                  <div className="p-4 rounded-lg neu-card">
+                    <h4 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       Все транзакции
-                      {userTransactions.loading && <span className="ml-2 text-sm text-gray-500">(загрузка...)</span>}
+                      {userTransactions.loading && <span className={`ml-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>(загрузка...)</span>}
                     </h4>
                     {userTransactions.loading ? (
                       <div className="text-center py-4">
@@ -9176,11 +9172,7 @@ const Dashboard: React.FC = () => {
                                     amountMax: '',
                                     direction: 'all'
                                   })}
-                                  className={`w-full px-3 py-1 text-sm rounded ${
-                                    isDark 
-                                      ? 'bg-gray-600 hover:bg-gray-500 text-gray-200' 
-                                      : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                                  } transition-colors`}
+                                  className="w-full neu-btn-filter"
                                 >
                                   Сбросить
                                 </button>
@@ -9281,26 +9273,29 @@ const Dashboard: React.FC = () => {
                                   const absValue = Math.abs(operationValue);
                                   
                                   return (
-                                    <div key={idx} className={`p-3 rounded border ${isDark ? 'bg-gray-600 border-gray-500' : 'bg-white border-gray-200'}`}>
+                                    <div key={idx} className="p-3 rounded-lg neu-card">
                                       <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-sm font-semibold font-mono ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                            <span className={`text-sm font-semibold font-mono ${isPositive 
+                                              ? (isDark ? 'text-green-400' : 'text-green-700') 
+                                              : (isDark ? 'text-red-400' : 'text-red-700')
+                                            }`}>
                                               {isPositive ? '+' : ''}{formatFullNumber(absValue)}
                                             </span>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">{assetName}</span>
+                                            <span className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{assetName}</span>
                                           </div>
-                                          <p className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                          <p className={`text-xs ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                             {transaction.operation_type || 'N/A'}
                                           </p>
                                           {transaction.operation_id && (
-                                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                               ID операции: {transaction.operation_id}
                                             </p>
                                           )}
                                         </div>
                                         <div className="text-right ml-4">
-                                          <span className={`text-xs block ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                          <span className={`text-xs block ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                             {transaction.created_at 
                                               ? new Date(transaction.created_at).toLocaleDateString('ru-RU', {
                                                   day: '2-digit',
@@ -9313,7 +9308,7 @@ const Dashboard: React.FC = () => {
                                               : 'N/A'}
                                           </span>
                                           {transaction.id && (
-                                            <span className={`text-xs block mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                            <span className={`text-xs block mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                               ID: {transaction.id}
                                             </span>
                                           )}
@@ -9329,15 +9324,15 @@ const Dashboard: React.FC = () => {
                         
                         {/* Статистика по типам транзакций */}
                         {userTransactions.transactions_by_type && Object.keys(userTransactions.transactions_by_type).length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-gray-300 dark:border-gray-600">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Статистика по типам:</p>
+                          <div className={`mt-4 pt-4 border-t ${isDark ? 'border-gray-600' : 'border-gray-300'}`}>
+                            <p className={`text-xs mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Статистика по типам:</p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                               {Object.entries(userTransactions.transactions_by_type).slice(0, 9).map(([type, stats]: [string, any]) => (
-                                <div key={type} className={`p-2 rounded ${isDark ? 'bg-gray-600' : 'bg-white'}`}>
-                                  <p className={`text-xs font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                <div key={type} className="p-2 rounded-lg neu-card-sm">
+                                  <p className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                     {type}
                                   </p>
-                                  <p className={`text-xs font-mono ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  <p className={`text-xs font-mono ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                                     {stats.count || 0} шт. / {formatFullNumber(stats.total_value || 0)}
                                   </p>
                                 </div>
