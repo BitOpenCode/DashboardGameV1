@@ -8675,11 +8675,7 @@ const Dashboard: React.FC = () => {
                                 <select
                                   value={orderFilters.type}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, type: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 >
                                   <option value="all">Все типы</option>
                                   <option value="asic">ASIC</option>
@@ -8698,11 +8694,7 @@ const Dashboard: React.FC = () => {
                                 <select
                                   value={orderFilters.status}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, status: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 >
                                   <option value="all">Все статусы</option>
                                   <option value="completed">Завершенные</option>
@@ -8721,11 +8713,7 @@ const Dashboard: React.FC = () => {
                                   type="date"
                                   value={orderFilters.dateFrom}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, dateFrom: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 />
                               </div>
 
@@ -8738,11 +8726,7 @@ const Dashboard: React.FC = () => {
                                   type="date"
                                   value={orderFilters.dateTo}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, dateTo: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 />
                               </div>
 
@@ -8777,11 +8761,7 @@ const Dashboard: React.FC = () => {
                                   value={orderFilters.pointsMin}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, pointsMin: e.target.value })}
                                   placeholder="0"
-                                  className={`w-full px-2 py-1 text-sm rounded border font-mono ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm font-mono neu-input"
                                 />
                               </div>
 
@@ -8796,11 +8776,7 @@ const Dashboard: React.FC = () => {
                                   value={orderFilters.pointsMax}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, pointsMax: e.target.value })}
                                   placeholder="∞"
-                                  className={`w-full px-2 py-1 text-sm rounded border font-mono ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm font-mono neu-input"
                                 />
                               </div>
 
@@ -8815,11 +8791,7 @@ const Dashboard: React.FC = () => {
                                   value={orderFilters.tonMin}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, tonMin: e.target.value })}
                                   placeholder="0"
-                                  className={`w-full px-2 py-1 text-sm rounded border font-mono ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm font-mono neu-input"
                                 />
                               </div>
 
@@ -8834,11 +8806,7 @@ const Dashboard: React.FC = () => {
                                   value={orderFilters.tonMax}
                                   onChange={(e) => setOrderFilters({ ...orderFilters, tonMax: e.target.value })}
                                   placeholder="∞"
-                                  className={`w-full px-2 py-1 text-sm rounded border font-mono ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm font-mono neu-input"
                                 />
                               </div>
                             </div>
@@ -9046,7 +9014,7 @@ const Dashboard: React.FC = () => {
                       <>
                         {/* Фильтры транзакций */}
                         {userTransactions.all_transactions && userTransactions.all_transactions.length > 0 && (
-                          <div className={`mb-4 p-3 rounded-lg ${isDark ? 'bg-gray-600' : 'bg-white border border-gray-200'}`}>
+                          <div className="mb-4 p-3 rounded-lg neu-card">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                               {/* Фильтр по типу транзакции */}
                               <div>
@@ -9056,11 +9024,7 @@ const Dashboard: React.FC = () => {
                                 <select
                                   value={transactionFilters.type}
                                   onChange={(e) => setTransactionFilters({ ...transactionFilters, type: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 >
                                   <option value="all">Все типы</option>
                                   {userTransactions.transactions_by_type && Object.keys(userTransactions.transactions_by_type).map((type) => (
@@ -9077,11 +9041,7 @@ const Dashboard: React.FC = () => {
                                 <select
                                   value={transactionFilters.direction}
                                   onChange={(e) => setTransactionFilters({ ...transactionFilters, direction: e.target.value as 'all' | 'income' | 'expense' })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 >
                                   <option value="all">Все</option>
                                   <option value="income">Поступления (+)</option>
@@ -9098,11 +9058,7 @@ const Dashboard: React.FC = () => {
                                   type="date"
                                   value={transactionFilters.dateFrom}
                                   onChange={(e) => setTransactionFilters({ ...transactionFilters, dateFrom: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 />
                               </div>
 
@@ -9115,11 +9071,7 @@ const Dashboard: React.FC = () => {
                                   type="date"
                                   value={transactionFilters.dateTo}
                                   onChange={(e) => setTransactionFilters({ ...transactionFilters, dateTo: e.target.value })}
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 />
                               </div>
 
@@ -9134,11 +9086,7 @@ const Dashboard: React.FC = () => {
                                   value={transactionFilters.amountMin}
                                   onChange={(e) => setTransactionFilters({ ...transactionFilters, amountMin: e.target.value })}
                                   placeholder="0"
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 />
                               </div>
 
@@ -9153,11 +9101,7 @@ const Dashboard: React.FC = () => {
                                   value={transactionFilters.amountMax}
                                   onChange={(e) => setTransactionFilters({ ...transactionFilters, amountMax: e.target.value })}
                                   placeholder="∞"
-                                  className={`w-full px-2 py-1 text-sm rounded border ${
-                                    isDark 
-                                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                                      : 'bg-white border-gray-300 text-gray-900'
-                                  }`}
+                                  className="w-full px-2 py-1 text-sm neu-input"
                                 />
                               </div>
 
