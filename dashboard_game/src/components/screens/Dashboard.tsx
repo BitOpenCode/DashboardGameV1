@@ -6116,7 +6116,7 @@ const Dashboard: React.FC = () => {
                                             ? `${user.wallet_address.slice(0, 8)}...${user.wallet_address.slice(-8)}`
                                             : user.wallet_address}
                                         </code>
-                      <button
+                                        <button
                                           onClick={() => {
                                             navigator.clipboard.writeText(user.wallet_address!);
                                             alert('Адрес кошелька скопирован!');
@@ -6128,6 +6128,19 @@ const Dashboard: React.FC = () => {
                                         >
                                           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            window.open(`https://tonviewer.com/${user.wallet_address}`, '_blank');
+                                          }}
+                                          className={`p-1 rounded transition-colors ${
+                                            isDark ? 'hover:bg-gray-600 text-gray-400 hover:text-gray-200' : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                                          }`}
+                                          title="Посмотреть адрес в блокчейне"
+                                        >
+                                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                           </svg>
                                         </button>
                                       </div>
@@ -7206,7 +7219,7 @@ const Dashboard: React.FC = () => {
       {selectedEventModal && filteredModalData && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4 pt-12 pb-32 overflow-y-auto"
-          onClick={() => { setSelectedEventModal(null); setModalTimeFilter('all'); }}
+          onClick={() => { setSelectedEventModal(null); setModalTimeFilter('all'); setModalChartType('line'); }}
         >
           <div 
             className={`max-w-4xl w-full rounded-xl shadow-2xl p-6 mb-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}
@@ -7221,7 +7234,7 @@ const Dashboard: React.FC = () => {
                 </h3>
               </div>
               <button
-                onClick={() => { setSelectedEventModal(null); setModalTimeFilter('all'); }}
+                onClick={() => { setSelectedEventModal(null); setModalTimeFilter('all'); setModalChartType('line'); }}
                 className={`p-2 rounded-lg transition-colors ${
                   isDark 
                     ? 'hover:bg-gray-700 text-gray-300' 
@@ -7235,7 +7248,7 @@ const Dashboard: React.FC = () => {
             </div>
             
             {/* Filter buttons */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 items-center mb-6">
               {[
                 { key: 'all', label: '1D' },
                 { key: '7', label: '1W' },
@@ -7249,6 +7262,22 @@ const Dashboard: React.FC = () => {
                   {label}
                 </button>
               ))}
+              <div className="h-6 w-px bg-gray-600 mx-1" />
+              <button
+                onClick={() => setModalChartType(modalChartType === 'line' ? 'bar' : 'line')}
+                className="neu-btn-filter"
+                title={modalChartType === 'line' ? 'Switch to Bar Chart' : 'Switch to Line Chart'}
+              >
+                {modalChartType === 'line' ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  </svg>
+                )}
+              </button>
             </div>
             
             {/* Статистика */}
